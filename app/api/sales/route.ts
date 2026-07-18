@@ -27,19 +27,15 @@ export async function GET() {
     );
   }
 }
-
-export async function POST() {
+export async function POST(request: Request) {
   try {
-    await createSale({
-      customer: "Rahul",
-      phone: "9876543210",
-      jaggeryKg: 5,
-      teaKg: 2,
-      paymentStatus: "Paid",
-    });
+    const body = await request.json();
+
+    const sale = await createSale(body);
 
     return NextResponse.json({
       success: true,
+      data: sale,
     });
   } catch (error) {
     console.error(error);
@@ -47,7 +43,7 @@ export async function POST() {
     return NextResponse.json(
       {
         success: false,
-        error: String(error),
+        error: "Failed to create sale",
       },
       {
         status: 500,
@@ -55,6 +51,7 @@ export async function POST() {
     );
   }
 }
+
 export async function PATCH(request: Request) {
   try {
     const body = await request.json();
