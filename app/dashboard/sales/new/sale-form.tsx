@@ -15,8 +15,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { saleSchema, SaleFormValues } from "./schema";
-import { useState } from "react";
-import { useRef } from "react";
+import { useEffect, useState, useRef } from "react";
+import { ProductRates } from "@/lib/google/types";
 
 export function SaleForm() {
     const form = useForm<
@@ -25,12 +25,13 @@ export function SaleForm() {
         SaleFormValues
     >({
         resolver: zodResolver(saleSchema),
+
         defaultValues: {
             customer: "",
             phone: "",
             jaggeryKg: 0,
             teaKg: 0,
-            paymentStatus: "Paid",
+            amountPaid: 0,
         },
     });
     const {
@@ -38,8 +39,39 @@ export function SaleForm() {
         ...customerField
     } = form.register("customer");
 
+    const [rates, setRates] = useState<ProductRates>({
+        jaggery: 0,
+        teaPowder: 0,
+    });
+
     const customerInputRef = useRef<HTMLInputElement>(null);
     const [isSaving, setIsSaving] = useState(false);
+
+
+    useEffect(() => {
+        async function loadRates() {
+            const response = await fetch("/api/rates");
+            const data = await response.json();
+
+            setRates(data);
+        }
+
+        loadRates();
+    }, []);
+
+    const jaggeryKg = Number(form.watch("jaggeryKg"));
+    const teaKg = Number(form.watch("teaKg"));
+    const amountPaid = Number(form.watch("amountPaid"));
+
+    const total = jaggeryKg * rates.jaggery + teaKg * rates.teaPowder;
+
+    const remaining = Math.max(
+        total - amountPaid,
+        0
+    );
+
+    const paymentStatus =
+        remaining === 0 ? "Paid" : "Credit";
 
     async function onSubmit(data: SaleFormValues) {
         setIsSaving(true);
@@ -121,8 +153,9 @@ export function SaleForm() {
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <Label htmlFor="jaggeryKg">Jaggery (kg)</Label>
-                            <Input
+                            <Label htmlFor="jaggeryKg">
+                                Jaggery (₹{rates.jaggery}/kg)
+                            </Label>                            <Input
                                 id="jaggeryKg"
                                 type="number"
                                 step="0.1"
@@ -133,8 +166,9 @@ export function SaleForm() {
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="teaKg">Tea Powder (kg)</Label>
-                            <Input
+                            <Label htmlFor="teaKg">
+                                Tea Powder (₹{rates.teaPowder}/kg)
+                            </Label>                            <Input
                                 id="teaKg"
                                 type="number"
                                 step="0.1"
@@ -145,17 +179,58 @@ export function SaleForm() {
                         </div>
                     </div>
 
-                    <div className="space-y-2">
-                        <Label htmlFor="paymentStatus">Payment Status</Label>
 
-                        <select
-                            id="paymentStatus"
-                            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                            {...form.register("paymentStatus")}
-                        >
-                            <option value="Paid">Paid</option>
-                            <option value="Credit">Credit</option>
-                        </select>
+                    <div className="space-y-2">
+                        <Label htmlFor="amountPaid">Amount Paid (₹)</Label>
+
+                        <Input
+                            id="amountPaid"
+                            type="number"
+                            placeholder="Enter paid amount"
+                            {...form.register("amountPaid", {
+                                valueAsNumber: true,
+                            })}
+                        />
+
+                        {form.formState.errors.amountPaid && (
+                            <p className="text-sm text-red-500">
+                                {form.formState.errors.amountPaid.message}
+                            </p>
+                        )}
+                    </div>
+
+
+                    <div className="rounded-lg border bg-muted/30 p-5 space-y-3">
+                        <div className="flex justify-between text-lg font-semibold">
+                            <span>Total</span>
+                            <span>₹{total}</span>
+                        </div>
+
+                        <div className="flex justify-between">
+                            <span>Paid</span>
+                            <span>₹{amountPaid}</span>
+                        </div>
+
+                        <div className="flex justify-between">
+                            <span>Remaining</span>
+                            <span>₹{remaining}</span>
+                        </div>
+
+                        <hr />
+
+                        <div className="flex justify-between font-bold">
+                            <span>Status</span>
+
+                            <span
+                                className={
+                                    paymentStatus === "Paid"
+                                        ? "text-green-600"
+                                        : "text-red-600"
+                                }
+                            >
+                                {paymentStatus}
+                            </span>
+                        </div>
                     </div>
 
                     <Button

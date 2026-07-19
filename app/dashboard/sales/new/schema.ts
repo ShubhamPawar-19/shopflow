@@ -10,8 +10,7 @@ export const saleSchema = z.object({
   jaggeryKg: z.coerce.number().min(0),
 
   teaKg: z.coerce.number().min(0),
-
-  paymentStatus: z.enum(["Paid", "Credit"]),
+  amountPaid: z.coerce.number().min(0),
 }).refine(
   (data) => data.jaggeryKg > 0 || data.teaKg > 0,
   {

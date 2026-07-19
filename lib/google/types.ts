@@ -12,6 +12,8 @@ export interface CreateSaleInput {
   jaggeryKg: number;
   teaKg: number;
 
+  amountPaid: number;
+
   paymentStatus: PaymentStatus;
 }
 
@@ -24,6 +26,21 @@ export interface Sale extends CreateSaleInput {
 
   total: number;
 
+  amountRemaining: number;
+
   saleMessageSent: boolean;
   paymentMessageSent: boolean;
+}
+
+export interface CustomerSummary {
+  customer: string;
+  phone: string;
+
+  totalPurchases: number;
+
+  outstanding: number;
+
+  lastPurchase: string;
+
+  salesCount: number;
 }

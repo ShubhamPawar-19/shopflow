@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Fragment, useState } from "react";
 import { SalesGroup } from "@/lib/google/utils";
 import { Badge } from "@/components/ui/badge";
+import { formatCurrency, formatDate } from "@/lib/utils/format";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -17,7 +18,6 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-import { Button } from "@/components/ui/button";
 
 interface RecentSalesProps {
     groups: SalesGroup[];
@@ -92,8 +92,7 @@ export function RecentSales({ groups }: RecentSalesProps) {
                                     <td
                                         colSpan={5}
                                         className="bg-muted p-4 font-semibold"
-                                    >
-                                        📅 {group.date} ({group.sales.length} sale
+                                    >📅 {formatDate(group.date)} ({group.sales.length} sale
                                         {group.sales.length > 1 ? "s" : ""})
                                     </td>
                                 </tr>
@@ -102,14 +101,11 @@ export function RecentSales({ groups }: RecentSalesProps) {
                                     <tr key={sale.id} className="border-b hover:bg-muted/50 transition-colors">
                                         <td className="p-4 font-medium">
                                             👤 {sale.customer}
-                                        </td>                                        <td className="p-4 text-right">{sale.jaggeryKg} kg</td>
+                                        </td>
+                                        <td className="p-4 text-right">{sale.jaggeryKg} kg</td>
                                         <td className="p-4 text-right">{sale.teaKg} kg</td>
                                         <td className="p-4 text-right font-medium">
-                                            {new Intl.NumberFormat("en-IN", {
-                                                style: "currency",
-                                                currency: "INR",
-                                                maximumFractionDigits: 0,
-                                            }).format(sale.total)}
+                                            formatCurrency(sale.total)
                                         </td>
                                         <td className="p-4 font-medium">
                                             {sale.paymentStatus === "Paid" ? (
@@ -120,16 +116,13 @@ export function RecentSales({ groups }: RecentSalesProps) {
                                                         Credit
                                                     </Badge>
                                                     <AlertDialog>
-                                                        <AlertDialogTrigger>
-                                                            <Button
-                                                                variant="link"
-                                                                size="sm"
-                                                                disabled={updatingSaleId === sale.id}
-                                                            >
-                                                                {updatingSaleId === sale.id
-                                                                    ? "Updating..."
-                                                                    : "Mark Paid"}
-                                                            </Button>
+                                                        <AlertDialogTrigger
+                                                            disabled={updatingSaleId === sale.id}
+                                                            className="text-sm text-primary underline hover:no-underline disabled:opacity-50"
+                                                        >
+                                                            {updatingSaleId === sale.id
+                                                                ? "Updating..."
+                                                                : "Mark Paid"}
                                                         </AlertDialogTrigger>
 
                                                         <AlertDialogContent>
@@ -142,11 +135,7 @@ export function RecentSales({ groups }: RecentSalesProps) {
                                                                     Customer: <strong>{sale.customer}</strong>
 
                                                                     <br />
-                                                                    Amount: <strong>{new Intl.NumberFormat("en-IN", {
-                                                                        style: "currency",
-                                                                        currency: "INR",
-                                                                        maximumFractionDigits: 0,
-                                                                    }).format(sale.total)}</strong>
+                                                                    Amount: <strong>{formatCurrency(sale.total)}</strong>
                                                                     <br /><br />
                                                                     This will update the payment status to <strong>Paid</strong>.
                                                                 </AlertDialogDescription>

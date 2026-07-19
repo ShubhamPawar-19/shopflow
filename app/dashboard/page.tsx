@@ -8,49 +8,60 @@ import {
   BadgeCheck,
   Clock3,
 } from "lucide-react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export default async function DashboardPage() {
-    const stats = await getDashboardStats();
-    const groupedSales = groupSalesByDate(
-        stats.recentSales
-    );
+  const stats = await getDashboardStats();
+  const groupedSales = groupSalesByDate(
+    stats.recentSales
+  );
 
-    return (
-        <main className="container mx-auto py-8 space-y-8">
-            <div>
-                <h1 className="text-3xl font-bold">Dashboard</h1>
+  return (
+    <main className="container mx-auto py-8 space-y-8">
+      <div>
+        <h1 className="text-3xl font-bold">Dashboard</h1>
 
-                <p className="text-muted-foreground">
-                    Shop overview
-                </p>
-            </div>
+        <p className="text-muted-foreground">
+          Shop overview
+        </p>
+      </div>
 
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <StatCard
-  title="Today's Revenue"
-  value={`₹${stats.todayRevenue}`}
-  icon={DollarSign}
-/>
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <StatCard
+          title="Today's Revenue"
+          value={`₹${stats.todayRevenue}`}
+          icon={DollarSign}
+        />
 
-<StatCard
-  title="Today's Sales"
-  value={stats.todaySales}
-  icon={ShoppingCart}
-/>
+        <StatCard
+          title="Today's Sales"
+          value={stats.todaySales}
+          icon={ShoppingCart}
+        />
 
-<StatCard
-  title="Paid"
-  value={`₹${stats.paidRevenue}`}
-  icon={BadgeCheck}
-/>
+        <StatCard
+          title="Paid"
+          value={`₹${stats.paidRevenue}`}
+          icon={BadgeCheck}
+        />
 
-<StatCard
-  title="Credit"
-  value={`₹${stats.creditRevenue}`}
-  icon={Clock3}
-/>
-            </div>
-            <RecentSales groups={groupedSales} />
-        </main>
-    );
+        <StatCard
+          title="Credit"
+          value={`₹${stats.creditRevenue}`}
+          icon={Clock3}
+        />
+      </div>
+      <div className="flex gap-4">
+        <Link href="/dashboard/customers">
+          <Button>Customers</Button>
+        </Link>
+
+        <Link href="/dashboard/new-sale">
+          <Button>New Sale</Button>
+        </Link>
+      </div>
+      <RecentSales groups={groupedSales} />
+    </main>
+  );
 }
