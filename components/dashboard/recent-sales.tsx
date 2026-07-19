@@ -2,19 +2,19 @@
 
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Fragment } from "react";
+import { Fragment, useState } from "react";
 import { SalesGroup } from "@/lib/google/utils";
 import { Badge } from "@/components/ui/badge";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,7 @@ interface RecentSalesProps {
 
 export function RecentSales({ groups }: RecentSalesProps) {
     const router = useRouter();
+    const [updatingSaleId, setUpdatingSaleId] = useState<string | null>(null);
 
     if (groups.length === 0) {
         return (
@@ -35,6 +36,8 @@ export function RecentSales({ groups }: RecentSalesProps) {
     }
 
     async function markAsPaid(saleId: string) {
+        setUpdatingSaleId(saleId);
+
         try {
             const response = await fetch(`/api/sales/${saleId}/payment`, {
                 method: "PATCH",
@@ -57,8 +60,9 @@ export function RecentSales({ groups }: RecentSalesProps) {
             }
         } catch (error) {
             console.error(error);
-
             toast.error("Something went wrong");
+        } finally {
+            setUpdatingSaleId(null);
         }
     }
 
@@ -89,19 +93,16 @@ export function RecentSales({ groups }: RecentSalesProps) {
                                         colSpan={5}
                                         className="bg-muted p-4 font-semibold"
                                     >
-                                        <td
-                                            colSpan={5}
-                                            className="bg-muted p-4 font-semibold"
-                                        >
-                                            📅 {group.date} ({group.sales.length} sale{group.sales.length > 1 ? "s" : ""})
-                                        </td>
+                                        📅 {group.date} ({group.sales.length} sale
+                                        {group.sales.length > 1 ? "s" : ""})
                                     </td>
                                 </tr>
 
                                 {group.sales.map((sale) => (
                                     <tr key={sale.id} className="border-b hover:bg-muted/50 transition-colors">
-                                        <td className="p-4 text-right">{sale.customer}</td>
-                                        <td className="p-4 text-right">{sale.jaggeryKg} kg</td>
+                                        <td className="p-4 font-medium">
+                                            👤 {sale.customer}
+                                        </td>                                        <td className="p-4 text-right">{sale.jaggeryKg} kg</td>
                                         <td className="p-4 text-right">{sale.teaKg} kg</td>
                                         <td className="p-4 text-right font-medium">
                                             {new Intl.NumberFormat("en-IN", {
@@ -119,9 +120,15 @@ export function RecentSales({ groups }: RecentSalesProps) {
                                                         Credit
                                                     </Badge>
                                                     <AlertDialog>
-                                                        <AlertDialogTrigger asChild>
-                                                            <Button variant="link" size="sm">
-                                                                Mark Paid
+                                                        <AlertDialogTrigger>
+                                                            <Button
+                                                                variant="link"
+                                                                size="sm"
+                                                                disabled={updatingSaleId === sale.id}
+                                                            >
+                                                                {updatingSaleId === sale.id
+                                                                    ? "Updating..."
+                                                                    : "Mark Paid"}
                                                             </Button>
                                                         </AlertDialogTrigger>
 
@@ -135,11 +142,12 @@ export function RecentSales({ groups }: RecentSalesProps) {
                                                                     Customer: <strong>{sale.customer}</strong>
 
                                                                     <br />
-
-                                                                    Amount: <strong>₹{sale.total}</strong>
-
+                                                                    Amount: <strong>{new Intl.NumberFormat("en-IN", {
+                                                                        style: "currency",
+                                                                        currency: "INR",
+                                                                        maximumFractionDigits: 0,
+                                                                    }).format(sale.total)}</strong>
                                                                     <br /><br />
-
                                                                     This will update the payment status to <strong>Paid</strong>.
                                                                 </AlertDialogDescription>
                                                             </AlertDialogHeader>
@@ -148,7 +156,6 @@ export function RecentSales({ groups }: RecentSalesProps) {
                                                                 <AlertDialogCancel>
                                                                     Cancel
                                                                 </AlertDialogCancel>
-
                                                                 <AlertDialogAction
                                                                     onClick={() => markAsPaid(sale.id)}
                                                                 >
