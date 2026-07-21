@@ -1,6 +1,8 @@
 import { getSales } from "@/lib/google/sales";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatDate } from "@/lib/utils/format";
+import { SendReminderButton } from "@/components/dashboard/send-reminder-button";
+import { getPaymentsByCustomerPhone } from "@/lib/google/payments";
 
 interface Props {
     params: Promise<{
@@ -19,6 +21,13 @@ export default async function CustomerPage({
         (sale) => sale.phone === phone
     );
 
+    const customerPayments = (
+        await getPaymentsByCustomerPhone(phone)
+    ).sort(
+        (a, b) =>
+            new Date(b.date).getTime() -
+            new Date(a.date).getTime()
+    );
     const customer = customerSales[0];
 
     const totalPurchases = customerSales.reduce(
@@ -28,6 +37,11 @@ export default async function CustomerPage({
 
     const outstanding = customerSales.reduce(
         (sum, sale) => sum + sale.amountRemaining,
+        0
+    );
+
+    const totalPaid = customerSales.reduce(
+        (sum, sale) => sum + sale.amountPaid,
         0
     );
 
@@ -50,24 +64,31 @@ export default async function CustomerPage({
                     </p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-3 gap-4">
                     <div className="rounded-lg border p-4">
                         <p className="text-sm text-muted-foreground">
                             Total Purchases
                         </p>
-
                         <p className="text-2xl font-bold">
-                            ₹{totalPurchases}
+                            {formatCurrency(totalPurchases)}
                         </p>
                     </div>
+                    <div className="rounded-lg border p-4">
+                        <p className="text-sm text-muted-foreground">
+                            Total Paid
+                        </p>
 
+                        <p className="text-2xl font-bold text-green-600">
+                            {formatCurrency(totalPaid)}
+                        </p>
+                    </div>
                     <div className="rounded-lg border p-4">
                         <p className="text-sm text-muted-foreground">
                             Outstanding
                         </p>
 
                         <p className="text-2xl font-bold text-red-600">
-                            ₹{outstanding}
+                            {formatCurrency(outstanding)}
                         </p>
                     </div>
                 </div>
@@ -109,19 +130,62 @@ export default async function CustomerPage({
                                     Remaining: {formatCurrency(sale.amountRemaining)}
                                 </p>
                             </div>
+                            <div className="flex items-center gap-2">
+                                <Badge
+                                    variant={
+                                        sale.paymentStatus === "Paid"
+                                            ? "default"
+                                            : "destructive"
+                                    }
+                                >
+                                    {sale.paymentStatus}
+                                </Badge>
 
-                            <Badge
-                                variant={
-                                    sale.paymentStatus === "Paid"
-                                        ? "default"
-                                        : "destructive"
-                                }
-                            >
-                                {sale.paymentStatus}
-                            </Badge>
+                                {sale.amountRemaining > 0 && (
+                                    <SendReminderButton
+                                        customer={sale.customer}
+                                        phone={sale.phone}
+                                        amount={sale.amountRemaining}
+                                    />
+                                )}
+                            </div>
                         </div>
                     </div>
                 ))}
+            </div>
+            <div className="rounded-lg border p-6 space-y-4">
+                <h2 className="text-xl font-bold">
+                    Payment History
+                </h2>
+
+                {customerPayments.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">
+                        No payments found.
+                    </p>
+                ) : (
+                    <div className="space-y-3">
+                        {customerPayments.map((payment) => (
+                            <div
+                                key={payment.id}
+                                className="flex items-center justify-between border-b pb-3 last:border-b-0"
+                            >
+                                <div>
+                                    <p className="font-medium">
+                                        {payment.paymentMode}
+                                    </p>
+
+                                    <p className="text-sm text-muted-foreground">
+                                        {formatDate(payment.date)}
+                                    </p>
+                                </div>
+
+                                <p className="font-semibold">
+                                    {formatCurrency(payment.amount)}
+                                </p>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
         </main>
     );

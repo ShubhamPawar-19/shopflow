@@ -17,6 +17,8 @@ import { Button } from "@/components/ui/button";
 import { saleSchema, SaleFormValues } from "./schema";
 import { useEffect, useState, useRef } from "react";
 import { ProductRates } from "@/lib/google/types";
+import { useRouter } from "next/navigation";
+import { formatCurrency } from "@/lib/utils/format";
 
 export function SaleForm() {
     const form = useForm<
@@ -46,6 +48,7 @@ export function SaleForm() {
 
     const customerInputRef = useRef<HTMLInputElement>(null);
     const [isSaving, setIsSaving] = useState(false);
+    const router = useRouter();
 
 
     useEffect(() => {
@@ -90,9 +93,8 @@ export function SaleForm() {
             if (result.success) {
                 toast.success("Sale added successfully!");
 
-                form.reset();
-
-                customerInputRef.current?.focus();
+                router.push("/dashboard");
+                router.refresh();
             } else {
                 toast.error("Failed to add sale.");
             }
@@ -203,17 +205,17 @@ export function SaleForm() {
                     <div className="rounded-lg border bg-muted/30 p-5 space-y-3">
                         <div className="flex justify-between text-lg font-semibold">
                             <span>Total</span>
-                            <span>₹{total}</span>
+                            <span>{formatCurrency(total)}</span>
                         </div>
 
                         <div className="flex justify-between">
                             <span>Paid</span>
-                            <span>₹{amountPaid}</span>
+                            <span>{formatCurrency(amountPaid)}</span>
                         </div>
 
                         <div className="flex justify-between">
                             <span>Remaining</span>
-                            <span>₹{remaining}</span>
+                            <span>{formatCurrency(remaining)}</span>
                         </div>
 
                         <hr />

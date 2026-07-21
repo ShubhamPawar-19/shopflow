@@ -17,7 +17,9 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-
+import { AddPaymentDialog } from "@/components/payments/AddPaymentDialog";
+import { Sale } from "@/lib/google/types";
+import { Button } from "@/components/ui/button";
 
 interface RecentSalesProps {
     groups: SalesGroup[];
@@ -26,6 +28,8 @@ interface RecentSalesProps {
 export function RecentSales({ groups }: RecentSalesProps) {
     const router = useRouter();
     const [updatingSaleId, setUpdatingSaleId] = useState<string | null>(null);
+    const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
+    const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
 
     if (groups.length === 0) {
         return (
@@ -105,17 +109,21 @@ export function RecentSales({ groups }: RecentSalesProps) {
                                         <td className="p-4 text-right">{sale.jaggeryKg} kg</td>
                                         <td className="p-4 text-right">{sale.teaKg} kg</td>
                                         <td className="p-4 text-right font-medium">
-                                            formatCurrency(sale.total)
+                                            {formatCurrency(sale.total)}
                                         </td>
                                         <td className="p-4 font-medium">
                                             {sale.paymentStatus === "Paid" ? (
                                                 <Badge>Paid</Badge>
                                             ) : (
                                                 <div className="flex items-center gap-2">
-                                                    <Badge variant="destructive">
-                                                        Credit
-                                                    </Badge>
-                                                    <AlertDialog>
+                                                    <div className="mt-2 text-xs text-muted-foreground">
+                                                        Paid {formatCurrency(sale.amountPaid)} / {formatCurrency(sale.total)}
+                                                    </div>
+
+                                                    <div className="text-xs font-medium">
+                                                        Remaining: {formatCurrency(sale.amountRemaining)}
+                                                    </div>
+                                                    {/* <AlertDialog>
                                                         <AlertDialogTrigger
                                                             disabled={updatingSaleId === sale.id}
                                                             className="text-sm text-primary underline hover:no-underline disabled:opacity-50"
@@ -152,7 +160,17 @@ export function RecentSales({ groups }: RecentSalesProps) {
                                                                 </AlertDialogAction>
                                                             </AlertDialogFooter>
                                                         </AlertDialogContent>
-                                                    </AlertDialog>
+                                                    </AlertDialog> */}
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => {
+                                                            setSelectedSale(sale);
+                                                            setPaymentDialogOpen(true);
+                                                        }}
+                                                    >
+                                                        Add Payment
+                                                    </Button>
                                                 </div>
                                             )}
                                         </td>
@@ -163,6 +181,19 @@ export function RecentSales({ groups }: RecentSalesProps) {
                     </tbody>
                 </table>
             </div>
+            {selectedSale && (
+                <AddPaymentDialog
+                    sale={selectedSale}
+                    open={paymentDialogOpen}
+                    onOpenChange={(open) => {
+                        setPaymentDialogOpen(open);
+
+                        if (!open) {
+                            setSelectedSale(null);
+                        }
+                    }}
+                />
+            )}
         </div>
     );
 }

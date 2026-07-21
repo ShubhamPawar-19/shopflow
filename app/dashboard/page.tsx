@@ -7,9 +7,11 @@ import {
   ShoppingCart,
   BadgeCheck,
   Clock3,
+  PlusIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { SendDailyReportButton } from "@/components/dashboard/send-daily-report-button";
 
 export default async function DashboardPage() {
   const stats = await getDashboardStats();
@@ -19,12 +21,16 @@ export default async function DashboardPage() {
 
   return (
     <main className="container mx-auto py-8 space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold">Dashboard</h1>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Dashboard</h1>
 
-        <p className="text-muted-foreground">
-          Shop overview
-        </p>
+          <p className="text-muted-foreground">
+            Shop overview
+          </p>
+        </div>
+
+        <SendDailyReportButton />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -52,13 +58,16 @@ export default async function DashboardPage() {
           icon={Clock3}
         />
       </div>
-      <div className="flex gap-4">
+      <div className="flex gap-4 justify-center items-center">
         <Link href="/dashboard/customers">
           <Button>Customers</Button>
         </Link>
 
-        <Link href="/dashboard/new-sale">
-          <Button>New Sale</Button>
+        <Link href="/dashboard/sales/new">
+          <Button>
+            <PlusIcon/>
+            New Sale
+          </Button>
         </Link>
       </div>
       <RecentSales groups={groupedSales} />

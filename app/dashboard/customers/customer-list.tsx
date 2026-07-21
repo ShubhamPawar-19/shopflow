@@ -50,7 +50,11 @@ export function CustomerList({ customers }: Props) {
                                 </p>
                             </div>
 
-                            <div className="text-right">
+                            <div className="text-right space-y-1">
+                                <p className="text-sm text-muted-foreground">
+                                    Total Purchase
+                                </p>
+
                                 <p className="font-semibold">
                                     {formatCurrency(customer.totalPurchases)}
                                 </p>

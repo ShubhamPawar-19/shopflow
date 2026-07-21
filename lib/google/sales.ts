@@ -83,10 +83,24 @@ export async function createSale(
     },
   });
 
-  await sendWhatsAppMessage({
-    to: sale.phone,
+  const whatsappNumber = sale.phone.startsWith("91")
+    ? sale.phone
+    : `91${sale.phone}`;
+
+    console.log("Sending WhatsApp to:", whatsappNumber);
+
+try {
+  const result = await sendWhatsAppMessage({
+    to: whatsappNumber,
     message: saleMessage(sale),
   });
+
+  console.log("WhatsApp send result:", result);
+} catch (err) {
+  console.error("WhatsApp send failed:", err);
+}
+
+return sale;
 
   return sale;
 }
@@ -122,6 +136,47 @@ export async function getSales(): Promise<Sale[]> {
     saleMessageSent: row[12] === "TRUE",
     paymentMessageSent: row[13] === "TRUE",
   }));
+}
+
+export async function getSaleById(
+  saleId: string
+): Promise<Sale | null> {
+  const sales = await getSales();
+
+  return sales.find((sale) => sale.id === saleId) ?? null;
+}
+
+export async function updateSalePayment(
+  saleId: string,
+  amountPaid: number,
+  amountRemaining: number,
+  paymentStatus: PaymentStatus
+): Promise<{ success: true }> {
+  const response = await sheets.spreadsheets.values.get({
+    spreadsheetId: process.env.GOOGLE_SHEET_ID!,
+    range: `${SHEETS.SALES}!A:N`,
+  });
+
+  const rows = response.data.values ?? [];
+
+  const rowIndex = rows.findIndex((row) => row[0] === saleId);
+
+  if (rowIndex === -1) {
+    throw new Error("Sale not found");
+  }
+
+  await sheets.spreadsheets.values.update({
+    spreadsheetId: process.env.GOOGLE_SHEET_ID!,
+    range: `${SHEETS.SALES}!J${rowIndex + 1}:L${rowIndex + 1}`,
+    valueInputOption: "USER_ENTERED",
+    requestBody: {
+      values: [[amountPaid, amountRemaining, paymentStatus]],
+    },
+  });
+
+  return {
+    success: true,
+  };
 }
 
 export async function updatePaymentStatus(

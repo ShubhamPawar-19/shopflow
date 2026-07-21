@@ -44,3 +44,26 @@ export interface CustomerSummary {
 
   salesCount: number;
 }
+
+
+export type PaymentMode = "CASH" | "UPI" | "BANK";
+
+export interface Payment {
+  id: string;
+  saleId: string;
+  customer: string;
+  phone: string;
+  amount: number;
+  paymentMode: PaymentMode;
+  date: string;
+  note?: string;
+}
+
+export interface CreatePaymentInput {
+  saleId: string;
+  customer: string;
+  phone: string;
+  amount: number;
+  paymentMode: PaymentMode;
+  note?: string;
+}
