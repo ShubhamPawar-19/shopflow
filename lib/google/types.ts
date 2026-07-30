@@ -1,6 +1,5 @@
 export interface ProductRates {
-  jaggery: number;
-  teaPowder: number;
+  pouch: number;
 }
 
 export type PaymentStatus = "Paid" | "Credit";
@@ -9,8 +8,7 @@ export interface CreateSaleInput {
   customer: string;
   phone: string;
 
-  jaggeryKg: number;
-  teaKg: number;
+  quantity: number;
 
   amountPaid: number;
 
@@ -21,8 +19,7 @@ export interface Sale extends CreateSaleInput {
   id: string;
   date: string;
 
-  jaggeryRate: number;
-  teaRate: number;
+  pouchRate: number;
 
   total: number;
 
@@ -44,7 +41,6 @@ export interface CustomerSummary {
 
   salesCount: number;
 }
-
 
 export type PaymentMode = "CASH" | "UPI" | "BANK";
 

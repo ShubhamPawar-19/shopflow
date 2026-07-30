@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getDashboardStats } from "@/lib/google/dashboard";
-import { sendWhatsAppMessage } from "@/lib/whatsapp";
+import { sendWhatsAppMessage } from "@/lib/whatsapp/sendWhatsAppMessage";
 import { dailyReportMessage } from "@/lib/whatsapp/templates";
 
 export async function POST() {

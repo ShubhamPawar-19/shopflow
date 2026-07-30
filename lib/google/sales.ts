@@ -1,14 +1,20 @@
 import { getRates } from "./rates";
 import { sheets } from "./sheets";
 import { SHEETS } from "./constants";
-import { saleMessage } from "@/lib/whatsapp/templates";
-import { sendWhatsAppMessage } from "@/lib/whatsapp";
 import {
   CreateSaleInput,
   Sale,
   PaymentStatus,
 } from "./types";
+import {
+  saleMessage,
+  qrCaptionMessage,
+} from "@/lib/whatsapp/templates";
 
+import {
+  sendWhatsAppMessage,
+} from "@/lib/whatsapp/sendWhatsAppMessage";
+import { sendWhatsAppImage } from "../whatsapp/send-whatsapp-image";
 function generateSaleId() {
   return crypto.randomUUID();
 }
@@ -18,13 +24,12 @@ export async function createSale(
 ): Promise<Sale> {
   const rates = await getRates();
 
-  const total =
-    input.jaggeryKg * rates.jaggery +
-    input.teaKg * rates.teaPowder;
+  const total = input.quantity * rates.pouch;
 
   if (input.amountPaid > total) {
     throw new Error("Amount paid cannot exceed total.");
   }
+
   const amountRemaining = Math.max(
     total - input.amountPaid,
     0
@@ -40,11 +45,8 @@ export async function createSale(
     customer: input.customer,
     phone: input.phone,
 
-    jaggeryKg: input.jaggeryKg,
-    teaKg: input.teaKg,
-
-    jaggeryRate: rates.jaggery,
-    teaRate: rates.teaPowder,
+    quantity: input.quantity,
+    pouchRate: rates.pouch,
 
     total,
 
@@ -59,7 +61,7 @@ export async function createSale(
 
   await sheets.spreadsheets.values.append({
     spreadsheetId: process.env.GOOGLE_SHEET_ID!,
-    range: `${SHEETS.SALES}!A:N`,
+    range: `${SHEETS.SALES}!A:L`,
     valueInputOption: "USER_ENTERED",
     requestBody: {
       values: [
@@ -68,17 +70,15 @@ export async function createSale(
           sale.date,
           sale.customer,
           sale.phone,
-          sale.jaggeryKg,
-          sale.jaggeryRate,
-          sale.teaKg,
-          sale.teaRate,
+          sale.quantity,
+          sale.pouchRate,
           sale.total,
           sale.amountPaid,
           sale.amountRemaining,
           sale.paymentStatus,
           sale.saleMessageSent,
           sale.paymentMessageSent,
-        ]
+        ],
       ],
     },
   });
@@ -87,28 +87,37 @@ export async function createSale(
     ? sale.phone
     : `91${sale.phone}`;
 
-    console.log("Sending WhatsApp to:", whatsappNumber);
+  console.log("Sending WhatsApp to:", whatsappNumber);
 
-try {
-  const result = await sendWhatsAppMessage({
-    to: whatsappNumber,
-    message: saleMessage(sale),
-  });
+  try {
+    // Send sale receipt first
+    const receiptResult = await sendWhatsAppMessage({
+      to: whatsappNumber,
+      message: saleMessage(sale),
+    });
 
-  console.log("WhatsApp send result:", result);
-} catch (err) {
-  console.error("WhatsApp send failed:", err);
-}
+    console.log("Receipt sent:", receiptResult);
 
-return sale;
+    // Send QR only if payment is pending
+    if (sale.amountRemaining > 0) {
+      const qrResult = await sendWhatsAppImage({
+        to: whatsappNumber,
+        imageUrl: process.env.UPI_QR_IMAGE_URL!,
+        caption: qrCaptionMessage(sale.amountRemaining),
+      });
 
+      console.log("QR sent:", qrResult);
+    }
+  } catch (err) {
+    console.error("WhatsApp send failed:", err);
+  }
   return sale;
 }
 
 export async function getSales(): Promise<Sale[]> {
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId: process.env.GOOGLE_SHEET_ID!,
-    range: `${SHEETS.SALES}!A:N`,
+    range: `${SHEETS.SALES}!A:L`,
   });
 
   const rows = response.data.values ?? [];
@@ -120,21 +129,18 @@ export async function getSales(): Promise<Sale[]> {
     customer: row[2],
     phone: row[3],
 
-    jaggeryKg: Number(row[4]),
-    jaggeryRate: Number(row[5]),
+    quantity: Number(row[4]),
+    pouchRate: Number(row[5]),
 
-    teaKg: Number(row[6]),
-    teaRate: Number(row[7]),
+    total: Number(row[6]),
 
-    total: Number(row[8]),
+    amountPaid: Number(row[7]),
+    amountRemaining: Number(row[8]),
 
-    amountPaid: Number(row[9]),
-    amountRemaining: Number(row[10]),
+    paymentStatus: row[9] as PaymentStatus,
 
-    paymentStatus: row[11] as PaymentStatus,
-
-    saleMessageSent: row[12] === "TRUE",
-    paymentMessageSent: row[13] === "TRUE",
+    saleMessageSent: row[10] === "TRUE",
+    paymentMessageSent: row[11] === "TRUE",
   }));
 }
 
@@ -154,7 +160,7 @@ export async function updateSalePayment(
 ): Promise<{ success: true }> {
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId: process.env.GOOGLE_SHEET_ID!,
-    range: `${SHEETS.SALES}!A:N`,
+    range: `${SHEETS.SALES}!A:L`,
   });
 
   const rows = response.data.values ?? [];
@@ -167,7 +173,7 @@ export async function updateSalePayment(
 
   await sheets.spreadsheets.values.update({
     spreadsheetId: process.env.GOOGLE_SHEET_ID!,
-    range: `${SHEETS.SALES}!J${rowIndex + 1}:L${rowIndex + 1}`,
+    range: `${SHEETS.SALES}!H${rowIndex + 1}:J${rowIndex + 1}`,
     valueInputOption: "USER_ENTERED",
     requestBody: {
       values: [[amountPaid, amountRemaining, paymentStatus]],
@@ -185,7 +191,7 @@ export async function updatePaymentStatus(
 ): Promise<{ success: true }> {
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId: process.env.GOOGLE_SHEET_ID!,
-    range: `${SHEETS.SALES}!A:N`,
+    range: `${SHEETS.SALES}!A:L`,
   });
 
   const rows = response.data.values ?? [];
@@ -195,14 +201,16 @@ export async function updatePaymentStatus(
   if (rowIndex === -1) {
     throw new Error("Sale not found");
   }
+
   await sheets.spreadsheets.values.update({
     spreadsheetId: process.env.GOOGLE_SHEET_ID!,
-    range: `${SHEETS.SALES}!L${rowIndex + 1}`,
+    range: `${SHEETS.SALES}!J${rowIndex + 1}`,
     valueInputOption: "USER_ENTERED",
     requestBody: {
       values: [[paymentStatus]],
     },
   });
+
   return {
     success: true,
   };

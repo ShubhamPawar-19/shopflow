@@ -42,3 +42,4 @@ next-env.d.ts
 
 #google service account credentials
 credentials
+.env.local

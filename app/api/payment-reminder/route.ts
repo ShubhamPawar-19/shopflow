@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { sendWhatsAppMessage } from "@/lib/whatsapp";
+import { sendWhatsAppMessage } from "@/lib/whatsapp/sendWhatsAppMessage";
 import { paymentReminderMessage } from "@/lib/whatsapp/templates";
 
 export async function POST(request: NextRequest) {

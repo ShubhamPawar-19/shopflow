@@ -10,25 +10,19 @@ export async function getRates(): Promise<ProductRates> {
 
   const rows = response.data.values ?? [];
 
-  let jaggery = 0;
-  let teaPowder = 0;
+  let pouch = 70; // Default price
 
   for (const row of rows.slice(1)) {
     const [product, rate] = row;
 
     const key = product.trim().toLowerCase();
 
-    if (key === "jaggery") {
-      jaggery = Number(rate);
-    }
-
-    if (key === "tea powder") {
-      teaPowder = Number(rate);
+    if (key === "pouch") {
+      pouch = Number(rate);
     }
   }
 
   return {
-    jaggery,
-    teaPowder,
+    pouch,
   };
 }

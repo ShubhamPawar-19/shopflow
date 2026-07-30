@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Bell } from "lucide-react";
 
 interface Props {
   customer: string;
@@ -15,47 +16,87 @@ export function SendReminderButton({
   phone,
   amount,
 }: Props) {
+
   const [loading, setLoading] = useState(false);
 
+
   async function sendReminder() {
+
     setLoading(true);
 
     try {
-      const response = await fetch("/api/payment-reminder", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          customer,
-          phone,
-          amount,
-        }),
-      });
+
+      const response = await fetch(
+        "/api/payment-reminder",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            customer,
+            phone,
+            amount,
+          }),
+        }
+      );
+
 
       const result = await response.json();
 
+
       if (result.success) {
-        toast.success("Reminder sent!");
+
+        toast.success(
+          "पेमेंट आठवण पाठवली"
+        );
+
       } else {
-        toast.error("Failed to send reminder");
+
+        toast.error(
+          "आठवण पाठवता आली नाही"
+        );
+
       }
-    } catch (error) {
+
+
+    } catch(error) {
+
       console.error(error);
-      toast.error("Something went wrong");
-    } finally {
-      setLoading(false);
+
+      toast.error(
+        "काहीतरी चूक झाली"
+      );
+
     }
+    finally {
+
+      setLoading(false);
+
+    }
+
   }
 
+
   return (
+
     <Button
       size="sm"
       variant="outline"
       onClick={sendReminder}
       disabled={loading}
+      className="gap-2"
     >
-      {loading ? "Sending..." : "Send Reminder"}
+
+      <Bell className="h-4 w-4"/>
+
+      {
+        loading
+          ? "पाठवत आहे..."
+          : "आठवण पाठवा"
+      }
+
     </Button>
+
   );
 }

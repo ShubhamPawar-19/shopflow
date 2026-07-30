@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { sendWhatsAppMessage } from "@/lib/whatsapp";
+import { sendWhatsAppMessage } from "@/lib/whatsapp/sendWhatsAppMessage";
 
 export async function GET() {
   try {
