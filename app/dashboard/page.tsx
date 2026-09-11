@@ -18,6 +18,8 @@ import { SendDailyReportButton } from "@/components/dashboard/send-daily-report-
 import { getDashboardStats } from "@/lib/google/dashboard";
 import { groupSalesByDate } from "@/lib/google/utils";
 
+export const dynamic = "force-dynamic";
+
 export default async function DashboardPage() {
   const stats = await getDashboardStats();
 

@@ -2,7 +2,6 @@ import { getSales } from "@/lib/google/sales";
 import { getPaymentsByCustomerPhone } from "@/lib/google/payments";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 
 import {
   formatCurrency,
@@ -20,6 +19,7 @@ interface Props {
   }>;
 }
 
+export const dynamic = "force-dynamic";
 
 export default async function CustomerPage({
   params,
