@@ -18,6 +18,17 @@ import {
 import { AddPaymentDialog } from "@/components/payments/AddPaymentDialog";
 import { SendReminderButton } from "./send-reminder-button";
 
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
 
 interface RecentSalesProps {
     groups: SalesGroup[];
@@ -35,6 +46,54 @@ export function RecentSales({
 
     const [paymentDialogOpen, setPaymentDialogOpen] =
         useState(false);
+
+    const [deleteDialogOpen, setDeleteDialogOpen] =
+        useState(false);
+
+    const [saleToDelete, setSaleToDelete] =
+        useState<Sale | null>(null);
+
+    const [deleting, setDeleting] =
+        useState(false);
+
+
+    async function handleDeleteSale() {
+        if (!saleToDelete) return;
+
+        setDeleting(true);
+
+        try {
+            const response = await fetch(
+                `/api/sales/${saleToDelete.id}`,
+                {
+                    method: "DELETE",
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                throw new Error(
+                    data.error || "Failed to delete sale"
+                );
+            }
+
+            toast.success("Sale deleted successfully");
+
+            setDeleteDialogOpen(false);
+            setSaleToDelete(null);
+
+            router.refresh();
+
+        } catch (error) {
+            console.error("Delete sale error:", error);
+
+            toast.error("Failed to delete sale");
+
+        } finally {
+            setDeleting(false);
+        }
+    }
 
 
     if (groups.length === 0) {
@@ -59,7 +118,6 @@ export function RecentSales({
       mt-8
       overflow-hidden
     ">
-
 
             {/* Header */}
 
@@ -87,16 +145,12 @@ export function RecentSales({
                     </p>
                 </div>
 
-
             </div>
-
 
 
             <div className="overflow-x-auto">
 
-
                 <table className="w-full">
-
 
                     <thead>
 
@@ -110,14 +164,12 @@ export function RecentSales({
                                 ग्राहक
                             </th>
 
-
                             <th className="
                 p-4
                 text-right
               ">
                                 पाऊच
                             </th>
-
 
                             <th className="
                 p-4
@@ -126,9 +178,12 @@ export function RecentSales({
                                 एकूण रक्कम
                             </th>
 
-
                             <th className="p-4">
                                 पेमेंट
+                            </th>
+
+                            <th className="p-4 text-right">
+                                Action
                             </th>
 
                         </tr>
@@ -136,20 +191,17 @@ export function RecentSales({
                     </thead>
 
 
-
                     <tbody>
-
 
                         {groups.map((group) => (
                             <Fragment key={group.date}>
-
 
                                 {/* Date */}
 
                                 <tr>
 
                                     <td
-                                        colSpan={4}
+                                        colSpan={5}
                                         className="
                       bg-muted
                       p-4
@@ -172,9 +224,7 @@ export function RecentSales({
                                 </tr>
 
 
-
                                 {group.sales.map((sale) => (
-
 
                                     <tr
                                         key={sale.id}
@@ -184,7 +234,6 @@ export function RecentSales({
                       transition
                     "
                                     >
-
 
                                         {/* Customer */}
 
@@ -196,7 +245,6 @@ export function RecentSales({
                                                 {sale.customer}
                                             </div>
 
-
                                             <div className="
                         text-sm
                         text-muted-foreground
@@ -204,10 +252,7 @@ export function RecentSales({
                                                 {sale.phone}
                                             </div>
 
-
                                         </td>
-
-
 
 
                                         {/* Quantity */}
@@ -217,12 +262,8 @@ export function RecentSales({
                       text-right
                       font-medium
                     ">
-
                                             {sale.quantity}
-
                                         </td>
-
-
 
 
                                         {/* Amount */}
@@ -238,20 +279,17 @@ export function RecentSales({
                                                 {formatCurrency(sale.total)}
                                             </div>
 
-
                                             <div className="
                         text-xs
                         text-muted-foreground
                       ">
-                                                भरले:
-                                                {" "}
-                                                {formatCurrency(sale.amountPaid)}
+                                                भरले:{" "}
+                                                {formatCurrency(
+                                                    sale.amountPaid
+                                                )}
                                             </div>
 
-
                                         </td>
-
-
 
 
                                         {/* Payment */}
@@ -259,7 +297,6 @@ export function RecentSales({
                                         <td className="p-4">
 
                                             <div className="space-y-3">
-
 
                                                 <div className="flex items-center gap-2">
 
@@ -273,7 +310,6 @@ export function RecentSales({
                                                         {sale.paymentStatus}
                                                     </Badge>
 
-
                                                 </div>
 
 
@@ -282,26 +318,27 @@ export function RecentSales({
                                                     <p>
                                                         Paid:
                                                         <span className="font-semibold ml-1">
-                                                            {formatCurrency(sale.amountPaid)}
+                                                            {formatCurrency(
+                                                                sale.amountPaid
+                                                            )}
                                                         </span>
                                                     </p>
-
 
                                                     <p className="text-red-600">
                                                         Pending:
                                                         <span className="font-semibold ml-1">
-                                                            {formatCurrency(sale.amountRemaining)}
+                                                            {formatCurrency(
+                                                                sale.amountRemaining
+                                                            )}
                                                         </span>
                                                     </p>
 
                                                 </div>
 
 
-
                                                 {sale.amountRemaining > 0 && (
 
                                                     <div className="flex gap-2">
-
 
                                                         <Button
                                                             size="sm"
@@ -321,65 +358,118 @@ export function RecentSales({
                                                             amount={sale.amountRemaining}
                                                         />
 
-
                                                     </div>
 
                                                 )}
 
-
                                             </div>
-
 
                                         </td>
 
 
+                                        {/* Delete */}
+
+                                        <td className="p-4 text-right">
+
+                                            <Button
+                                                size="sm"
+                                                variant="destructive"
+                                                onClick={() => {
+                                                    setSaleToDelete(sale);
+                                                    setDeleteDialogOpen(true);
+                                                }}
+                                            >
+                                                Delete
+                                            </Button>
+
+                                        </td>
+
                                     </tr>
 
-
                                 ))}
-
 
                             </Fragment>
                         ))}
 
-
                     </tbody>
 
-
                 </table>
-
 
             </div>
 
 
+            {/* Add Payment Dialog */}
 
-            {
-                selectedSale && (
+            {selectedSale && (
 
-                    <AddPaymentDialog
+                <AddPaymentDialog
+                    sale={selectedSale}
+                    open={paymentDialogOpen}
+                    onOpenChange={(open) => {
 
-                        sale={selectedSale}
+                        setPaymentDialogOpen(open);
 
-                        open={paymentDialogOpen}
+                        if (!open) {
+                            setSelectedSale(null);
+                            router.refresh();
+                        }
 
-                        onOpenChange={(open) => {
+                    }}
+                />
 
-                            setPaymentDialogOpen(open);
-
-
-                            if (!open) {
-                                setSelectedSale(null);
-                                router.refresh();
-                            }
-
-                        }}
-
-                    />
-
-                )
-            }
+            )}
 
 
+            {/* Delete Confirmation */}
+
+            <AlertDialog
+                open={deleteDialogOpen}
+                onOpenChange={setDeleteDialogOpen}
+            >
+
+                <AlertDialogContent>
+
+                    <AlertDialogHeader>
+
+                        <AlertDialogTitle>
+                            Delete this sale?
+                        </AlertDialogTitle>
+
+                        <AlertDialogDescription>
+                            This will permanently delete the sale
+                            {saleToDelete
+                                ? ` for ${saleToDelete.customer}`
+                                : ""}
+                            {" "}and all payments associated with it.
+                            This action cannot be undone.
+                        </AlertDialogDescription>
+
+                    </AlertDialogHeader>
+
+
+                    <AlertDialogFooter>
+
+                        <AlertDialogCancel
+                            disabled={deleting}
+                        >
+                            Cancel
+                        </AlertDialogCancel>
+
+                        <AlertDialogAction
+                            onClick={handleDeleteSale}
+                            disabled={deleting}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                            {deleting
+                                ? "Deleting..."
+                                : "Delete Sale"}
+                        </AlertDialogAction>
+
+                    </AlertDialogFooter>
+
+                </AlertDialogContent>
+
+            </AlertDialog>
 
         </div>
     );

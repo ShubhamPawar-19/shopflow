@@ -10,7 +10,7 @@ export async function getRates(): Promise<ProductRates> {
 
   const rows = response.data.values ?? [];
 
-  let pouch = 70; // Default price
+  let pouch = 80; // Default price
 
   for (const row of rows.slice(1)) {
     const [product, rate] = row;

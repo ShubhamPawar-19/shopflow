@@ -2,31 +2,100 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Search, ShoppingBag } from "lucide-react";
+import { Search, ShoppingBag, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { CustomerSummary } from "@/lib/google/types";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { formatCurrency, formatDate } from "@/lib/utils/format";
+import { Button } from "@/components/ui/button";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
+import {
+    formatCurrency,
+    formatDate,
+} from "@/lib/utils/format";
 
 interface Props {
     customers: CustomerSummary[];
 }
 
-export function CustomerList({ customers }: Props) {
+export function CustomerList({
+    customers,
+}: Props) {
     const [search, setSearch] = useState("");
 
-    const filteredCustomers = customers.filter((customer) =>
-        customer.customer
-            .toLowerCase()
-            .includes(search.toLowerCase()) ||
-        customer.phone.includes(search)
+    const [deleteDialogOpen, setDeleteDialogOpen] =
+        useState(false);
+
+    const [customerToDelete, setCustomerToDelete] =
+        useState<CustomerSummary | null>(null);
+
+    const [deleting, setDeleting] = useState(false);
+
+    const filteredCustomers = customers.filter(
+        (customer) =>
+            customer.customer
+                .toLowerCase()
+                .includes(search.toLowerCase()) ||
+            customer.phone.includes(search)
     );
+
+    async function handleDeleteCustomer() {
+        if (!customerToDelete) return;
+
+        setDeleting(true);
+
+        try {
+            const response = await fetch(
+                `/api/customers/${encodeURIComponent(
+                    customerToDelete.phone
+                )}`,
+                {
+                    method: "DELETE",
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                throw new Error(
+                    data.error || "Failed to delete customer"
+                );
+            }
+
+            toast.success("Customer deleted successfully");
+
+            setDeleteDialogOpen(false);
+            setCustomerToDelete(null);
+
+            window.location.reload();
+        } catch (error) {
+            console.error(
+                "Delete customer error:",
+                error
+            );
+
+            toast.error("Failed to delete customer");
+        } finally {
+            setDeleting(false);
+        }
+    }
 
     return (
         <div className="space-y-6">
 
             {/* Search */}
+
             <div className="relative">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
 
@@ -42,6 +111,7 @@ export function CustomerList({ customers }: Props) {
 
 
             {/* Empty State */}
+
             {filteredCustomers.length === 0 && (
                 <div className="rounded-xl border p-10 text-center">
 
@@ -56,33 +126,44 @@ export function CustomerList({ customers }: Props) {
 
 
             {/* Customer Cards */}
+
             <div className="grid gap-4">
 
                 {filteredCustomers.map((customer) => (
 
-                    <Link
+                    <div
                         key={customer.phone}
-                        href={`/dashboard/customers/${customer.phone}`}
                         className="
-                        block rounded-xl border p-5
-                        hover:bg-muted/40
-                        transition-all
-                        hover:shadow-sm
+                            rounded-xl
+                            border
+                            p-5
+                            hover:bg-muted/40
+                            transition-all
+                            hover:shadow-sm
                         "
                     >
 
-                        <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-
+                        <div className="
+                            flex
+                            flex-col
+                            gap-5
+                            md:flex-row
+                            md:items-center
+                            md:justify-between
+                        ">
 
                             {/* Customer Info */}
-                            <div>
+
+                            <Link
+                                href={`/dashboard/customers/${customer.phone}`}
+                                className="block flex-1"
+                            >
 
                                 <div className="flex items-center gap-3">
 
                                     <h2 className="text-xl font-semibold">
                                         {customer.customer}
                                     </h2>
-
 
                                     <Badge variant="secondary">
                                         Franchise
@@ -98,15 +179,21 @@ export function CustomerList({ customers }: Props) {
 
                                 <p className="mt-2 text-xs text-muted-foreground">
                                     शेवटची खरेदी:{" "}
-                                    {formatDate(customer.lastPurchase)}
+                                    {formatDate(
+                                        customer.lastPurchase
+                                    )}
                                 </p>
 
-                            </div>
-
+                            </Link>
 
 
                             {/* Purchase Summary */}
-                            <div className="text-left md:text-right space-y-2">
+
+                            <div className="
+                                text-left
+                                md:text-right
+                                space-y-2
+                            ">
 
                                 <p className="text-sm text-muted-foreground">
                                     एकूण खरेदी
@@ -126,16 +213,44 @@ export function CustomerList({ customers }: Props) {
 
                             </div>
 
+
+                            {/* Delete */}
+
+                            <div className="flex justify-end">
+
+                                <Button
+                                    variant="destructive"
+                                    size="sm"
+                                    onClick={() => {
+                                        setCustomerToDelete(
+                                            customer
+                                        );
+                                        setDeleteDialogOpen(
+                                            true
+                                        );
+                                    }}
+                                >
+                                    <Trash2 className="h-4 w-4" />
+                                    Delete
+                                </Button>
+
+                            </div>
+
                         </div>
 
 
-
                         {/* Outstanding */}
+
                         <div
                             className="
-                            mt-5 flex items-center
-                            justify-between rounded-lg
-                            bg-muted/40 px-4 py-3
+                                mt-5
+                                flex
+                                items-center
+                                justify-between
+                                rounded-lg
+                                bg-muted/40
+                                px-4
+                                py-3
                             "
                         >
 
@@ -147,25 +262,82 @@ export function CustomerList({ customers }: Props) {
                             <span
                                 className={
                                     customer.outstanding > 0
-                                    ? "font-bold text-red-600"
-                                    : "font-bold text-green-600"
+                                        ? "font-bold text-red-600"
+                                        : "font-bold text-green-600"
                                 }
                             >
-
                                 {customer.outstanding > 0
-                                    ? formatCurrency(customer.outstanding)
+                                    ? formatCurrency(
+                                        customer.outstanding
+                                    )
                                     : "Paid"}
-
                             </span>
 
                         </div>
 
-
-                    </Link>
+                    </div>
 
                 ))}
 
             </div>
+
+
+            {/* Delete Confirmation */}
+
+            <AlertDialog
+                open={deleteDialogOpen}
+                onOpenChange={setDeleteDialogOpen}
+            >
+
+                <AlertDialogContent>
+
+                    <AlertDialogHeader>
+
+                        <AlertDialogTitle>
+                            Delete this customer?
+                        </AlertDialogTitle>
+
+                        <AlertDialogDescription>
+                            This will permanently delete{" "}
+                            <span className="font-semibold">
+                                {customerToDelete?.customer}
+                            </span>
+                            {" "}and all of their orders and
+                            payment history. This action cannot
+                            be undone.
+                        </AlertDialogDescription>
+
+                    </AlertDialogHeader>
+
+
+                    <AlertDialogFooter>
+
+                        <AlertDialogCancel
+                            disabled={deleting}
+                        >
+                            Cancel
+                        </AlertDialogCancel>
+
+
+                        <AlertDialogAction
+                            onClick={handleDeleteCustomer}
+                            disabled={deleting}
+                            className="
+                                bg-destructive
+                                text-destructive-foreground
+                                hover:bg-destructive/90
+                            "
+                        >
+                            {deleting
+                                ? "Deleting..."
+                                : "Delete Customer"}
+                        </AlertDialogAction>
+
+                    </AlertDialogFooter>
+
+                </AlertDialogContent>
+
+            </AlertDialog>
 
         </div>
     );

@@ -74,10 +74,16 @@ export async function createPayment(
     try {
         await sendWhatsAppMessage({
             to: whatsappNumber,
-            message: paymentReceivedMessage(payment, newRemaining),
+            message: paymentReceivedMessage(
+                payment,
+                newRemaining
+            ),
         });
     } catch (error) {
-        console.error("Payment WhatsApp failed:", error);
+        console.error(
+            "Payment WhatsApp failed:",
+            error
+        );
     }
 
     return payment;
@@ -131,4 +137,67 @@ export async function getPaymentsByCustomerPhone(
             date: row[6],
             note: row[7],
         }));
+}
+
+export async function deletePaymentsBySaleId(
+    saleId: string
+): Promise<{ success: true }> {
+    const response = await sheets.spreadsheets.values.get({
+        spreadsheetId: process.env.GOOGLE_SHEET_ID!,
+        range: `${SHEETS.PAYMENTS}!A:H`,
+    });
+
+    const rows = response.data.values ?? [];
+
+    const paymentRows = rows
+        .map((row, index) => ({
+            row,
+            index,
+        }))
+        .filter(({ row, index }) =>
+            index > 0 && row[1] === saleId
+        );
+
+    if (paymentRows.length === 0) {
+        return { success: true };
+    }
+
+    const spreadsheet = await sheets.spreadsheets.get({
+        spreadsheetId: process.env.GOOGLE_SHEET_ID!,
+        fields: "sheets.properties",
+    });
+
+    const paymentsSheet = spreadsheet.data.sheets?.find(
+        (sheet) =>
+            sheet.properties?.title === SHEETS.PAYMENTS
+    );
+
+    const sheetId = paymentsSheet?.properties?.sheetId;
+
+    if (sheetId === undefined) {
+        throw new Error("Payments sheet not found");
+    }
+
+    // Delete from bottom to top so row indexes don't shift.
+    const requests = paymentRows
+        .sort((a, b) => b.index - a.index)
+        .map(({ index }) => ({
+            deleteDimension: {
+                range: {
+                    sheetId,
+                    dimension: "ROWS" as const,
+                    startIndex: index,
+                    endIndex: index + 1,
+                },
+            },
+        }));
+
+    await sheets.spreadsheets.batchUpdate({
+        spreadsheetId: process.env.GOOGLE_SHEET_ID!,
+        requestBody: {
+            requests,
+        },
+    });
+
+    return { success: true };
 }

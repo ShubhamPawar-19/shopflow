@@ -215,3 +215,57 @@ export async function updatePaymentStatus(
     success: true,
   };
 }
+
+export async function deleteSale(
+  saleId: string
+): Promise<{ success: true }> {
+  const response = await sheets.spreadsheets.values.get({
+    spreadsheetId: process.env.GOOGLE_SHEET_ID!,
+    range: `${SHEETS.SALES}!A:L`,
+  });
+
+  const rows = response.data.values ?? [];
+
+  const rowIndex = rows.findIndex(
+    (row) => row[0] === saleId
+  );
+
+  if (rowIndex === -1) {
+    throw new Error("Sale not found");
+  }
+
+  const spreadsheet = await sheets.spreadsheets.get({
+    spreadsheetId: process.env.GOOGLE_SHEET_ID!,
+    fields: "sheets.properties",
+  });
+
+  const salesSheet = spreadsheet.data.sheets?.find(
+    (sheet) => sheet.properties?.title === SHEETS.SALES
+  );
+
+  const sheetId = salesSheet?.properties?.sheetId;
+
+  if (sheetId === undefined) {
+    throw new Error("Sales sheet not found");
+  }
+
+  await sheets.spreadsheets.batchUpdate({
+    spreadsheetId: process.env.GOOGLE_SHEET_ID!,
+    requestBody: {
+      requests: [
+        {
+          deleteDimension: {
+            range: {
+              sheetId,
+              dimension: "ROWS",
+              startIndex: rowIndex,
+              endIndex: rowIndex + 1,
+            },
+          },
+        },
+      ],
+    },
+  });
+
+  return { success: true };
+}
