@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+
 import {
   deleteSale,
   updatePaymentStatus,
 } from "@/lib/google/sales";
-import { deletePaymentsBySaleId } from "@/lib/google/payments";
+
+import {
+  deletePaymentsBySaleId,
+} from "@/lib/google/payments";
 
 export async function PATCH(
   request: NextRequest,
@@ -13,18 +17,27 @@ export async function PATCH(
     const { paymentStatus } = await request.json();
     const { id } = await params;
 
-    await updatePaymentStatus(id, paymentStatus);
+    await updatePaymentStatus(
+      id,
+      paymentStatus
+    );
 
     return NextResponse.json({
       success: true,
     });
   } catch (error) {
-    console.error(error);
+    console.error(
+      "Update payment error:",
+      error
+    );
 
     return NextResponse.json(
       {
         success: false,
-        error: "Failed to update payment",
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to update payment",
       },
       {
         status: 500,
@@ -60,12 +73,18 @@ export async function DELETE(
       success: true,
     });
   } catch (error) {
-    console.error("Delete sale error:", error);
+    console.error(
+      "Delete sale error:",
+      error
+    );
 
     return NextResponse.json(
       {
         success: false,
-        error: "Failed to delete sale",
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to delete sale",
       },
       { status: 500 }
     );

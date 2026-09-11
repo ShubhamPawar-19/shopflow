@@ -67,9 +67,14 @@ export function DeleteSaleButton({
     return (
         <>
             <Button
-                variant="destructive"
+                variant="ghost"
                 size="sm"
                 onClick={() => setOpen(true)}
+                className="
+                    text-muted-foreground
+                    hover:bg-red-50
+                    hover:text-red-600
+                "
             >
                 <Trash2 className="h-4 w-4" />
                 Delete
@@ -106,7 +111,11 @@ export function DeleteSaleButton({
                         <AlertDialogAction
                             onClick={handleDelete}
                             disabled={deleting}
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            className="
+                                bg-destructive
+                                text-destructive-foreground
+                                hover:bg-destructive/90
+                            "
                         >
                             {deleting
                                 ? "Deleting..."

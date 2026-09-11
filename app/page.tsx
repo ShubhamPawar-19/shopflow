@@ -33,10 +33,6 @@ export default function Home() {
                 <h1 className="text-3xl font-bold tracking-tight">
                   गुरुकृपा
                 </h1>
-
-                <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-bold tracking-wide text-amber-700">
-                  SHOPFLOW
-                </span>
               </div>
 
               <p className="text-sm text-muted-foreground">
