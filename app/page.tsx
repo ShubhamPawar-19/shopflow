@@ -1,44 +1,90 @@
 import Image from "next/image";
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 
 export default function Home() {
   return (
-    <main className="min-h-screen flex items-center justify-center bg-muted/30 px-4">
-      <div className="w-full max-w-md rounded-2xl border bg-background p-8 shadow-lg text-center space-y-6">
+    <main className="flex min-h-screen items-center justify-center bg-[#f6f5f2] px-4 py-8">
+      <div className="w-full max-w-md">
 
-        <div className="flex justify-center">
-          <Image
-            src="/images/logo.png"
-            alt="गुरुकृपा"
-            width={100}
-            height={100}
-            className="rounded-full border-4 border-primary shadow-md object-cover"
-            priority
-          />
+        <div className="overflow-hidden rounded-2xl border bg-white shadow-sm">
+
+          {/* Logo / Brand */}
+
+          <div className="bg-gradient-to-br from-amber-50/80 via-white to-white px-8 pt-10 text-center">
+
+            <div className="flex justify-center">
+              <div className="rounded-3xl bg-amber-50 p-2 ring-1 ring-amber-100">
+                <Image
+                  src="/images/logo.png"
+                  alt="गुरुकृपा"
+                  width={100}
+                  height={100}
+                  className="rounded-2xl object-cover"
+                  priority
+                />
+              </div>
+            </div>
+
+            <div className="mt-6 space-y-2">
+              <div className="flex items-center justify-center gap-2">
+                <h1 className="text-3xl font-bold tracking-tight">
+                  गुरुकृपा
+                </h1>
+
+                <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-bold tracking-wide text-amber-700">
+                  SHOPFLOW
+                </span>
+              </div>
+
+              <p className="text-sm text-muted-foreground">
+                फ्रँचायझी व्यवस्थापन प्रणाली
+              </p>
+            </div>
+
+          </div>
+
+          {/* Action */}
+
+          <div className="space-y-4 px-8 pb-10 pt-8">
+
+            <div className="rounded-xl border bg-[#faf9f6] p-4 text-center">
+              <p className="text-sm text-muted-foreground">
+                Welcome back 👋
+              </p>
+
+              <p className="mt-1 text-xs text-muted-foreground">
+                तुमचा व्यवसाय सहजपणे व्यवस्थापित करा.
+              </p>
+            </div>
+
+            <Link href="/dashboard" className="block">
+              <Button
+                className="
+                  h-12
+                  w-full
+                  bg-amber-600
+                  text-base
+                  font-semibold
+                  text-white
+                  shadow-sm
+                  hover:bg-amber-700
+                "
+              >
+                Open Dashboard
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+
+          </div>
+
         </div>
 
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold">
-            गुरुकृपा
-          </h1>
-
-          <p className="text-muted-foreground">
-            फ्रँचायझी व्यवस्थापन प्रणाली
-          </p>
-        </div>
-
-        <div className="space-y-3">
-          <p className="text-sm text-muted-foreground">
-            Welcome back 👋
-          </p>
-
-          <Link href="/dashboard">
-            <Button className="w-full h-12 text-base">
-              Open Dashboard
-            </Button>
-          </Link>
-        </div>
+        <p className="mt-5 text-center text-xs text-muted-foreground">
+          गुरुकृपा फ्रँचायझी व्यवस्थापन
+        </p>
 
       </div>
     </main>
