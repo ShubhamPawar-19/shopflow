@@ -3,11 +3,13 @@
 import { Fragment, useState } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+
 import {
     CalendarDays,
     CheckCircle2,
     Clock3,
     CreditCard,
+    Pencil,
     Trash2,
     Wallet,
 } from "lucide-react";
@@ -24,6 +26,7 @@ import {
 } from "@/lib/utils/format";
 
 import { AddPaymentDialog } from "@/components/payments/AddPaymentDialog";
+import { EditSaleDialog } from "@/components/payments/EditSaleDialog";
 import { SendReminderButton } from "./send-reminder-button";
 
 import {
@@ -52,6 +55,9 @@ export function RecentSales({
     const [paymentDialogOpen, setPaymentDialogOpen] =
         useState(false);
 
+    const [editDialogOpen, setEditDialogOpen] =
+        useState(false);
+
     const [deleteDialogOpen, setDeleteDialogOpen] =
         useState(false);
 
@@ -78,11 +84,14 @@ export function RecentSales({
 
             if (!response.ok || !data.success) {
                 throw new Error(
-                    data.error || "Failed to delete sale"
+                    data.error ||
+                    "Failed to delete sale"
                 );
             }
 
-            toast.success("Sale deleted successfully");
+            toast.success(
+                "Sale deleted successfully"
+            );
 
             setDeleteDialogOpen(false);
             setSaleToDelete(null);
@@ -94,7 +103,9 @@ export function RecentSales({
                 error
             );
 
-            toast.error("Failed to delete sale");
+            toast.error(
+                "Failed to delete sale"
+            );
         } finally {
             setDeleting(false);
         }
@@ -102,41 +113,38 @@ export function RecentSales({
 
     if (groups.length === 0) {
         return (
-            <div className="
-                mt-8
-                rounded-2xl
-                border
-                border-dashed
-                bg-white
-                p-12
-                text-center
-            ">
-                <div className="
-                    mx-auto
-                    flex
-                    h-12
-                    w-12
-                    items-center
-                    justify-center
-                    rounded-full
-                    bg-amber-50
-                    text-amber-600
-                ">
+            <div
+                className="
+                    mt-8
+                    rounded-2xl
+                    border
+                    border-dashed
+                    bg-white
+                    p-12
+                    text-center
+                "
+            >
+                <div
+                    className="
+                        mx-auto
+                        flex
+                        h-12
+                        w-12
+                        items-center
+                        justify-center
+                        rounded-full
+                        bg-amber-50
+                        text-amber-600
+                    "
+                >
                     <Wallet className="h-6 w-6" />
                 </div>
 
-                <p className="
-                    mt-4
-                    font-medium
-                ">
+                <p className="mt-4 font-medium">
                     अजून कोणतीही विक्री झालेली नाही.
                 </p>
 
-                <p className="
-                    mt-1
-                    text-sm
-                    text-muted-foreground
-                ">
+                <p className="mt-1 text-sm text-muted-foreground">
                     नवीन विक्री केल्यावर ती येथे दिसेल.
                 </p>
             </div>
@@ -144,157 +152,125 @@ export function RecentSales({
     }
 
     return (
-        <div className="
-            mt-8
-            overflow-hidden
-            rounded-2xl
-            border
-            bg-white
-            shadow-sm
-        ">
-
+        <div
+            className="
+                mt-8
+                overflow-hidden
+                rounded-2xl
+                border
+                bg-white
+                shadow-sm
+            "
+        >
             {/* Section Header */}
 
-            <div className="
-                flex
-                flex-col
-                gap-4
-                border-b
-                bg-gradient-to-r
-                from-amber-50/70
-                to-white
-                p-6
-                sm:flex-row
-                sm:items-center
-                sm:justify-between
-            ">
-
+            <div
+                className="
+                    flex
+                    flex-col
+                    gap-4
+                    border-b
+                    bg-gradient-to-r
+                    from-amber-50/70
+                    to-white
+                    p-6
+                    sm:flex-row
+                    sm:items-center
+                    sm:justify-between
+                "
+            >
                 <div className="flex items-start gap-3">
-
-                    <div className="
-                        flex
-                        h-11
-                        w-11
-                        shrink-0
-                        items-center
-                        justify-center
-                        rounded-xl
-                        bg-amber-100
-                        text-amber-700
-                    ">
+                    <div
+                        className="
+                            flex
+                            h-11
+                            w-11
+                            shrink-0
+                            items-center
+                            justify-center
+                            rounded-xl
+                            bg-amber-100
+                            text-amber-700
+                        "
+                    >
                         <CreditCard className="h-5 w-5" />
                     </div>
 
                     <div>
-                        <h2 className="
-                            text-xl
-                            font-bold
-                            tracking-tight
-                        ">
+                        <h2
+                            className="
+                                text-xl
+                                font-bold
+                                tracking-tight
+                            "
+                        >
                             अलीकडील विक्री
                         </h2>
 
-                        <p className="
-                            mt-1
-                            text-sm
-                            text-muted-foreground
-                        ">
+                        <p className="mt-1 text-sm text-muted-foreground">
                             फ्रँचायझी ऑर्डर आणि पेमेंट माहिती
                         </p>
                     </div>
-
                 </div>
 
-                <div className="
-                    hidden
-                    rounded-full
-                    border
-                    bg-white
-                    px-3
-                    py-1.5
-                    text-xs
-                    font-medium
-                    text-muted-foreground
-                    sm:block
-                ">
+                <div
+                    className="
+                        hidden
+                        rounded-full
+                        border
+                        bg-white
+                        px-3
+                        py-1.5
+                        text-xs
+                        font-medium
+                        text-muted-foreground
+                        sm:block
+                    "
+                >
                     Recent Orders
                 </div>
-
             </div>
-
 
             {/* Table */}
 
             <div className="overflow-x-auto">
-
-                <table className="w-full min-w-[900px]">
-
-                    {/* Table Header */}
-
+                <table className="w-full min-w-[1000px]">
                     <thead>
-                        <tr className="
-                            border-b
-                            bg-muted/30
-                            text-xs
-                            uppercase
-                            tracking-wide
-                            text-muted-foreground
-                        ">
-
-                            <th className="
-                                px-6
-                                py-4
-                                text-left
-                                font-semibold
-                            ">
+                        <tr
+                            className="
+                                border-b
+                                bg-muted/30
+                                text-xs
+                                uppercase
+                                tracking-wide
+                                text-muted-foreground
+                            "
+                        >
+                            <th className="px-6 py-4 text-left font-semibold">
                                 ग्राहक
                             </th>
 
-                            <th className="
-                                px-4
-                                py-4
-                                text-right
-                                font-semibold
-                            ">
+                            <th className="px-4 py-4 text-right font-semibold">
                                 पाऊच
                             </th>
 
-                            <th className="
-                                px-4
-                                py-4
-                                text-right
-                                font-semibold
-                            ">
+                            <th className="px-4 py-4 text-right font-semibold">
                                 एकूण रक्कम
                             </th>
 
-                            <th className="
-                                px-4
-                                py-4
-                                text-left
-                                font-semibold
-                            ">
+                            <th className="px-4 py-4 text-left font-semibold">
                                 पेमेंट
                             </th>
 
-                            <th className="
-                                px-6
-                                py-4
-                                text-right
-                                font-semibold
-                            ">
+                            <th className="px-6 py-4 text-right font-semibold">
                                 Action
                             </th>
-
                         </tr>
                     </thead>
 
-
                     <tbody>
-
                         {groups.map((group) => (
                             <Fragment key={group.date}>
-
                                 {/* Date Group */}
 
                                 <tr>
@@ -307,53 +283,46 @@ export function RecentSales({
                                             py-3
                                         "
                                     >
-                                        <div className="
-                                            flex
-                                            items-center
-                                            gap-2
-                                        ">
-
-                                            <div className="
-                                                flex
-                                                h-7
-                                                w-7
-                                                items-center
-                                                justify-center
-                                                rounded-lg
-                                                bg-amber-100
-                                                text-amber-700
-                                            ">
+                                        <div className="flex items-center gap-2">
+                                            <div
+                                                className="
+                                                    flex
+                                                    h-7
+                                                    w-7
+                                                    items-center
+                                                    justify-center
+                                                    rounded-lg
+                                                    bg-amber-100
+                                                    text-amber-700
+                                                "
+                                            >
                                                 <CalendarDays className="h-4 w-4" />
                                             </div>
 
-                                            <span className="
-                                                text-sm
-                                                font-semibold
-                                            ">
+                                            <span className="text-sm font-semibold">
                                                 {formatDate(group.date)}
                                             </span>
 
-                                            <span className="
-                                                rounded-full
-                                                bg-white
-                                                px-2
-                                                py-0.5
-                                                text-xs
-                                                font-medium
-                                                text-muted-foreground
-                                            ">
+                                            <span
+                                                className="
+                                                    rounded-full
+                                                    bg-white
+                                                    px-2
+                                                    py-0.5
+                                                    text-xs
+                                                    font-medium
+                                                    text-muted-foreground
+                                                "
+                                            >
                                                 {group.sales.length} ऑर्डर
                                             </span>
-
                                         </div>
                                     </td>
                                 </tr>
 
-
                                 {/* Sales */}
 
                                 {group.sales.map((sale) => (
-
                                     <tr
                                         key={sale.id}
                                         className="
@@ -364,121 +333,114 @@ export function RecentSales({
                                             hover:bg-amber-50/30
                                         "
                                     >
-
                                         {/* Customer */}
 
                                         <td className="px-6 py-5">
-
-                                            <div className="
-                                                flex
-                                                items-center
-                                                gap-3
-                                            ">
-
-                                                <div className="
-                                                    flex
-                                                    h-10
-                                                    w-10
-                                                    shrink-0
-                                                    items-center
-                                                    justify-center
-                                                    rounded-xl
-                                                    bg-muted
-                                                    text-sm
-                                                    font-bold
-                                                ">
+                                            <div className="flex items-center gap-3">
+                                                <div
+                                                    className="
+                                                        flex
+                                                        h-10
+                                                        w-10
+                                                        shrink-0
+                                                        items-center
+                                                        justify-center
+                                                        rounded-xl
+                                                        bg-muted
+                                                        text-sm
+                                                        font-bold
+                                                    "
+                                                >
                                                     {sale.customer
                                                         .charAt(0)
                                                         .toUpperCase()}
                                                 </div>
 
                                                 <div>
-                                                    <div className="
-                                                        font-semibold
-                                                    ">
+                                                    <div className="font-semibold">
                                                         {sale.customer}
                                                     </div>
 
-                                                    <div className="
-                                                        mt-0.5
-                                                        text-xs
-                                                        text-muted-foreground
-                                                    ">
+                                                    <div
+                                                        className="
+                                                            mt-0.5
+                                                            text-xs
+                                                            text-muted-foreground
+                                                        "
+                                                    >
                                                         {sale.phone}
                                                     </div>
                                                 </div>
-
                                             </div>
-
                                         </td>
-
 
                                         {/* Quantity */}
 
-                                        <td className="
-                                            px-4
-                                            py-5
-                                            text-right
-                                        ">
-                                            <span className="
-                                                inline-flex
-                                                min-w-10
-                                                items-center
-                                                justify-center
-                                                rounded-lg
-                                                bg-muted/60
-                                                px-2.5
-                                                py-1.5
-                                                text-sm
-                                                font-semibold
-                                            ">
+                                        <td
+                                            className="
+                                                px-4
+                                                py-5
+                                                text-right
+                                            "
+                                        >
+                                            <span
+                                                className="
+                                                    inline-flex
+                                                    min-w-10
+                                                    items-center
+                                                    justify-center
+                                                    rounded-lg
+                                                    bg-muted/60
+                                                    px-2.5
+                                                    py-1.5
+                                                    text-sm
+                                                    font-semibold
+                                                "
+                                            >
                                                 {sale.quantity}
                                             </span>
                                         </td>
 
-
                                         {/* Amount */}
 
-                                        <td className="
-                                            px-4
-                                            py-5
-                                            text-right
-                                        ">
-
-                                            <div className="
-                                                font-bold
-                                            ">
+                                        <td
+                                            className="
+                                                px-4
+                                                py-5
+                                                text-right
+                                            "
+                                        >
+                                            <div className="font-bold">
                                                 {formatCurrency(
                                                     sale.total
                                                 )}
                                             </div>
 
-                                            <div className="
-                                                mt-1
-                                                text-xs
-                                                text-muted-foreground
-                                            ">
+                                            <div
+                                                className="
+                                                    mt-1
+                                                    text-xs
+                                                    text-muted-foreground
+                                                "
+                                            >
                                                 जमा{" "}
                                                 {formatCurrency(
                                                     sale.amountPaid
                                                 )}
                                             </div>
-
                                         </td>
-
 
                                         {/* Payment */}
 
                                         <td className="px-4 py-5">
-
-                                            <div className="
-                                                min-w-[220px]
-                                                space-y-2
-                                            ">
-
-                                                {/* Status */}
-
-                                                {sale.paymentStatus === "Paid" ? (
+                                            <div
+                                                className="
+                                                    min-w-[220px]
+                                                    space-y-2
+                                                "
+                                            >
+                                                {sale.paymentStatus ===
+                                                "Paid" ? (
                                                     <Badge
                                                         className="
                                                             gap-1.5
@@ -506,61 +468,53 @@ export function RecentSales({
                                                     </Badge>
                                                 )}
 
-
-                                                {/* Payment Details */}
-
-                                                <div className="
-                                                    flex
-                                                    flex-wrap
-                                                    gap-x-4
-                                                    gap-y-1
-                                                    text-xs
-                                                ">
-
-                                                    <span className="
-                                                        text-muted-foreground
-                                                    ">
+                                                <div
+                                                    className="
+                                                        flex
+                                                        flex-wrap
+                                                        gap-x-4
+                                                        gap-y-1
+                                                        text-xs
+                                                    "
+                                                >
+                                                    <span className="text-muted-foreground">
                                                         Paid:
-                                                        <span className="
-                                                            ml-1
-                                                            font-semibold
-                                                            text-foreground
-                                                        ">
+                                                        <span
+                                                            className="
+                                                                ml-1
+                                                                font-semibold
+                                                                text-foreground
+                                                            "
+                                                        >
                                                             {formatCurrency(
                                                                 sale.amountPaid
                                                             )}
                                                         </span>
                                                     </span>
 
-                                                    {sale.amountRemaining > 0 && (
-                                                        <span className="
-                                                            text-red-600
-                                                        ">
+                                                    {sale.amountRemaining >
+                                                        0 && (
+                                                        <span className="text-red-600">
                                                             Pending:
-                                                            <span className="
-                                                                ml-1
-                                                                font-semibold
-                                                            ">
+                                                            <span className="ml-1 font-semibold">
                                                                 {formatCurrency(
                                                                     sale.amountRemaining
                                                                 )}
                                                             </span>
                                                         </span>
                                                     )}
-
                                                 </div>
 
-
-                                                {/* Actions */}
-
-                                                {sale.amountRemaining > 0 && (
-                                                    <div className="
-                                                        flex
-                                                        flex-wrap
-                                                        gap-2
-                                                        pt-1
-                                                    ">
-
+                                                {sale.amountRemaining >
+                                                    0 && (
+                                                    <div
+                                                        className="
+                                                            flex
+                                                            flex-wrap
+                                                            gap-2
+                                                            pt-1
+                                                        "
+                                                    >
                                                         <Button
                                                             size="sm"
                                                             variant="outline"
@@ -596,63 +550,104 @@ export function RecentSales({
                                                                 sale.amountRemaining
                                                             }
                                                         />
-
                                                     </div>
                                                 )}
-
                                             </div>
-
                                         </td>
 
+                                        {/* Actions */}
 
-                                        {/* Delete */}
-
-                                        <td className="
-                                            px-6
-                                            py-5
-                                            text-right
-                                        ">
-
-                                            <Button
-                                                size="sm"
-                                                variant="ghost"
+                                        <td
+                                            className="
+                                                px-6
+                                                py-5
+                                                text-right
+                                            "
+                                        >
+                                            <div
                                                 className="
-                                                    text-muted-foreground
-                                                    opacity-70
-                                                    hover:bg-red-50
-                                                    hover:text-red-600
-                                                    group-hover:opacity-100
+                                                    flex
+                                                    items-center
+                                                    justify-end
+                                                    gap-1
                                                 "
-                                                onClick={() => {
-                                                    setSaleToDelete(
-                                                        sale
-                                                    );
-                                                    setDeleteDialogOpen(
-                                                        true
-                                                    );
-                                                }}
                                             >
-                                                <Trash2 className="h-4 w-4" />
-                                                <span className="ml-1.5">
-                                                    Delete
-                                                </span>
-                                            </Button>
+                                                {/* Edit */}
 
+                                                <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    className="
+                                                        text-muted-foreground
+                                                        hover:bg-amber-50
+                                                        hover:text-amber-700
+                                                    "
+                                                    onClick={() => {
+                                                        setSelectedSale(
+                                                            sale
+                                                        );
+                                                        setEditDialogOpen(
+                                                            true
+                                                        );
+                                                    }}
+                                                >
+                                                    <Pencil className="h-4 w-4" />
+                                                    <span className="ml-1.5">
+                                                        Edit
+                                                    </span>
+                                                </Button>
+
+                                                {/* Delete */}
+
+                                                <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    className="
+                                                        text-muted-foreground
+                                                        opacity-70
+                                                        hover:bg-red-50
+                                                        hover:text-red-600
+                                                        group-hover:opacity-100
+                                                    "
+                                                    onClick={() => {
+                                                        setSaleToDelete(
+                                                            sale
+                                                        );
+                                                        setDeleteDialogOpen(
+                                                            true
+                                                        );
+                                                    }}
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                    <span className="ml-1.5">
+                                                        Delete
+                                                    </span>
+                                                </Button>
+                                            </div>
                                         </td>
-
                                     </tr>
-
                                 ))}
-
                             </Fragment>
                         ))}
-
                     </tbody>
-
                 </table>
-
             </div>
 
+            {/* Edit Sale Dialog */}
+
+            {selectedSale && (
+                <EditSaleDialog
+                    sale={selectedSale}
+                    open={editDialogOpen}
+                    onOpenChange={(open) => {
+                        setEditDialogOpen(open);
+
+                        if (!open) {
+                            setSelectedSale(null);
+                        }
+                    }}
+                />
+            )}
 
             {/* Add Payment Dialog */}
 
@@ -671,18 +666,14 @@ export function RecentSales({
                 />
             )}
 
-
             {/* Delete Confirmation */}
 
             <AlertDialog
                 open={deleteDialogOpen}
                 onOpenChange={setDeleteDialogOpen}
             >
-
                 <AlertDialogContent>
-
                     <AlertDialogHeader>
-
                         <AlertDialogTitle>
                             Delete this sale?
                         </AlertDialogTitle>
@@ -695,12 +686,9 @@ export function RecentSales({
                             {" "}and all payments associated with it.
                             This action cannot be undone.
                         </AlertDialogDescription>
-
                     </AlertDialogHeader>
 
-
                     <AlertDialogFooter>
-
                         <AlertDialogCancel
                             disabled={deleting}
                         >
@@ -720,13 +708,9 @@ export function RecentSales({
                                 ? "Deleting..."
                                 : "Delete Sale"}
                         </AlertDialogAction>
-
                     </AlertDialogFooter>
-
                 </AlertDialogContent>
-
             </AlertDialog>
-
         </div>
     );
 }

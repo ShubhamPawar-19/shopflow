@@ -7,24 +7,25 @@ export type PaymentStatus = "Paid" | "Credit";
 export interface CreateSaleInput {
   customer: string;
   phone: string;
-
   quantity: number;
-
   amountPaid: number;
-
   paymentStatus: PaymentStatus;
+}
+
+export interface UpdateSaleInput {
+  date: string;
+  customer: string;
+  phone: string;
+  quantity: number;
+  amountPaid: number;
 }
 
 export interface Sale extends CreateSaleInput {
   id: string;
   date: string;
-
   pouchRate: number;
-
   total: number;
-
   amountRemaining: number;
-
   saleMessageSent: boolean;
   paymentMessageSent: boolean;
 }
@@ -32,13 +33,9 @@ export interface Sale extends CreateSaleInput {
 export interface CustomerSummary {
   customer: string;
   phone: string;
-
   totalPurchases: number;
-
   outstanding: number;
-
   lastPurchase: string;
-
   salesCount: number;
 }
 
