@@ -565,6 +565,17 @@ export function SaleForm() {
                   </span>
                 </div>
 
+                {amountPaid > total && (
+                  <div className="flex items-center justify-between border-t border-amber-100 pt-4">
+                    <span className="text-sm font-medium text-muted-foreground">
+                      जास्त मिळाले
+                    </span>
+
+                    <span className="font-bold text-amber-700">
+                      {formatCurrency(amountPaid - total)}
+                    </span>
+                  </div>
+                )}
 
                 {/* Status */}
 

@@ -26,10 +26,6 @@ export async function createSale(
 
   const total = input.quantity * rates.pouch;
 
-  if (input.amountPaid > total) {
-    throw new Error("Amount paid cannot exceed total.");
-  }
-
   const amountRemaining = Math.max(
     total - input.amountPaid,
     0
