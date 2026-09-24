@@ -3,6 +3,7 @@ import { sheets } from "./sheets";
 import { SHEETS } from "./constants";
 import {
   CreateSaleInput,
+  UpdateSaleInput,
   Sale,
   PaymentStatus,
 } from "./types";
@@ -204,6 +205,114 @@ export async function updatePaymentStatus(
     valueInputOption: "USER_ENTERED",
     requestBody: {
       values: [[paymentStatus]],
+    },
+  });
+
+  return {
+    success: true,
+  };
+}
+
+export async function updateSale(
+  saleId: string,
+  input: UpdateSaleInput
+): Promise<{ success: true }> {
+  const response = await sheets.spreadsheets.values.get({
+    spreadsheetId: process.env.GOOGLE_SHEET_ID!,
+    range: `${SHEETS.SALES}!A:L`,
+  });
+
+  const rows = response.data.values ?? [];
+
+  const rowIndex = rows.findIndex(
+    (row) => row[0] === saleId
+  );
+
+  if (rowIndex === -1) {
+    throw new Error("Sale not found");
+  }
+
+  const row = rows[rowIndex];
+
+  // Keep the original pouch rate for this sale.
+  const pouchRate = Number(row[5]);
+
+  if (!pouchRate || pouchRate <= 0) {
+    throw new Error("Invalid pouch rate");
+  }
+
+  if (!input.customer.trim()) {
+    throw new Error("Customer name is required");
+  }
+
+  if (!input.phone.trim()) {
+    throw new Error("Phone number is required");
+  }
+
+  if (!input.date) {
+    throw new Error("Sale date is required");
+  }
+
+  if (input.quantity <= 0) {
+    throw new Error(
+      "Quantity must be greater than 0"
+    );
+  }
+
+  if (input.amountPaid < 0) {
+    throw new Error(
+      "Amount paid cannot be negative"
+    );
+  }
+
+  const total =
+    input.quantity * pouchRate;
+
+  if (input.amountPaid > total) {
+    throw new Error(
+      "Amount paid cannot exceed total"
+    );
+  }
+
+  const amountRemaining = Math.max(
+    total - input.amountPaid,
+    0
+  );
+
+  const paymentStatus: PaymentStatus =
+    amountRemaining === 0
+      ? "Paid"
+      : "Credit";
+
+  // Store the edited date as an ISO date.
+  // Noon UTC avoids the date shifting to the
+  // previous/next day because of timezone conversion.
+  const saleDate = new Date(
+    `${input.date}T12:00:00.000Z`
+  );
+
+  if (Number.isNaN(saleDate.getTime())) {
+    throw new Error("Invalid sale date");
+  }
+
+  await sheets.spreadsheets.values.update({
+    spreadsheetId: process.env.GOOGLE_SHEET_ID!,
+    range: `${SHEETS.SALES}!B${rowIndex + 1}:J${rowIndex + 1}`,
+    valueInputOption: "USER_ENTERED",
+    requestBody: {
+      values: [
+        [
+          saleDate.toISOString(),
+          input.customer.trim(),
+          input.phone.trim(),
+          input.quantity,
+          pouchRate,
+          total,
+          input.amountPaid,
+          amountRemaining,
+          paymentStatus,
+        ],
+      ],
     },
   });
 
