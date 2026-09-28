@@ -1,31 +1,27 @@
 import { NextResponse } from "next/server";
+
 import {
+    createCustomerPayment,
     createPayment,
     getPaymentsBySaleId,
 } from "@/lib/google/payments";
-
-import {
-    getSaleById,
-    updateSalePayment,
-} from "@/lib/google/sales";
 
 export async function POST(request: Request) {
     try {
         const body = await request.json();
 
-        const payment = await createPayment(body);
-
-        const sale = await getSaleById(payment.saleId);
-
-        if (!sale) {
-            throw new Error("Sale not found");
-        }
-
-        if (payment.amount > sale.amountRemaining) {
+        if (
+            !body.customer ||
+            !body.phone ||
+            !body.amount ||
+            Number(body.amount) <= 0 ||
+            !body.paymentMode
+        ) {
             return NextResponse.json(
                 {
                     success: false,
-                    error: "Payment amount exceeds remaining balance",
+                    error:
+                        "Customer, phone, amount and payment mode are required",
                 },
                 {
                     status: 400,
@@ -33,33 +29,58 @@ export async function POST(request: Request) {
             );
         }
 
-        const updatedAmountPaid = sale.amountPaid + payment.amount;
+        /*
+         * Existing sale-specific payment flow.
+         */
+        if (body.saleId) {
+            const payment = await createPayment({
+                saleId: body.saleId,
+                customer: body.customer,
+                phone: body.phone,
+                amount: Number(body.amount),
+                paymentMode: body.paymentMode,
+                note: body.note,
+            });
 
-        const updatedAmountRemaining = Math.max(
-            sale.total - updatedAmountPaid,
-            0
-        );
+            return NextResponse.json({
+                success: true,
+                data: payment,
+            });
+        }
 
-        const updatedPaymentStatus =
-            updatedAmountRemaining === 0 ? "Paid" : "Credit";
+        /*
+         * New customer-level payment flow.
+         *
+         * The backend automatically allocates the
+         * payment from oldest outstanding sale
+         * to newest.
+         */
+        const payment =
+            await createCustomerPayment({
+                customer: body.customer,
+                phone: body.phone,
+                amount: Number(body.amount),
+                paymentMode: body.paymentMode,
+                note: body.note,
+            });
 
-        await updateSalePayment(
-            sale.id,
-            updatedAmountPaid,
-            updatedAmountRemaining,
-            updatedPaymentStatus
-        );
         return NextResponse.json({
             success: true,
             data: payment,
         });
     } catch (error) {
-        console.error(error);
+        console.error(
+            "Create payment error:",
+            error
+        );
 
         return NextResponse.json(
             {
                 success: false,
-                error: "Failed to create payment",
+                error:
+                    error instanceof Error
+                        ? error.message
+                        : "Failed to create payment",
             },
             {
                 status: 500,
@@ -67,11 +88,14 @@ export async function POST(request: Request) {
         );
     }
 }
+
 export async function GET(request: Request) {
     try {
-        const { searchParams } = new URL(request.url);
+        const { searchParams } =
+            new URL(request.url);
 
-        const saleId = searchParams.get("saleId");
+        const saleId =
+            searchParams.get("saleId");
 
         if (!saleId) {
             return NextResponse.json(
@@ -85,14 +109,18 @@ export async function GET(request: Request) {
             );
         }
 
-        const payments = await getPaymentsBySaleId(saleId);
+        const payments =
+            await getPaymentsBySaleId(saleId);
 
         return NextResponse.json({
             success: true,
             data: payments,
         });
     } catch (error) {
-        console.error(error);
+        console.error(
+            "Fetch payments error:",
+            error
+        );
 
         return NextResponse.json(
             {

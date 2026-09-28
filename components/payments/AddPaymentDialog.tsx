@@ -205,7 +205,7 @@ export function AddPaymentDialog({
                     className="
                         shrink-0
                         border-b
-                        bg-gradient-to-r
+                        bg-linear-to-r
                         from-amber-50/80
                         to-white
                         px-6

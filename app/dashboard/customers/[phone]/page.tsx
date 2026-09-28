@@ -1,6 +1,5 @@
 import { getSales } from "@/lib/google/sales";
 import { getPaymentsByCustomerPhone } from "@/lib/google/payments";
-
 import {
   ArrowLeft,
   CalendarDays,
@@ -21,6 +20,7 @@ import {
 } from "@/lib/utils/format";
 
 import { SendReminderButton } from "@/components/dashboard/send-reminder-button";
+import { CustomerPaymentButton } from "@/components/payments/customer-payment-button";
 
 interface Props {
   params: Promise<{
@@ -91,6 +91,12 @@ export default async function CustomerPage({
     0
   );
 
+  const unallocatedAmount = customerPayments.reduce(
+    (sum, payment) =>
+      sum + (payment.saleId === "" ? payment.amount : 0),
+    0
+  );
+
   return (
     <main className="min-h-screen bg-[#f6f5f2] px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl space-y-8">
@@ -105,13 +111,10 @@ export default async function CustomerPage({
           ग्राहक यादी
         </Link>
 
-
         {/* Customer Header */}
 
         <section className="overflow-hidden rounded-2xl border bg-white shadow-sm">
-
-          <div className="bg-gradient-to-r from-amber-50/80 via-white to-white p-6 sm:p-7">
-
+          <div className="bg-linear-to-r from-amber-50/80 via-white to-white p-6 sm:p-7">
             <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
 
               <div className="flex items-start gap-4">
@@ -127,7 +130,6 @@ export default async function CustomerPage({
                 <div>
 
                   <div className="flex flex-wrap items-center gap-2">
-
                     <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
                       {customer.customer}
                     </h1>
@@ -138,7 +140,6 @@ export default async function CustomerPage({
                     >
                       Franchise
                     </Badge>
-
                   </div>
 
                   <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
@@ -151,31 +152,33 @@ export default async function CustomerPage({
                   </p>
 
                 </div>
-
               </div>
 
+              {/* Actions */}
 
-              {/* Reminder */}
-
-              {outstanding > 0 && (
-                <SendReminderButton
+              <div className="flex flex-wrap items-center gap-3">
+                <CustomerPaymentButton
                   customer={customer.customer}
                   phone={customer.phone}
-                  amount={outstanding}
+                  outstanding={outstanding}
                 />
-              )}
+
+                {outstanding > 0 && (
+                  <SendReminderButton
+                    customer={customer.customer}
+                    phone={customer.phone}
+                    amount={outstanding}
+                  />
+                )}
+              </div>
 
             </div>
-
           </div>
-
         </section>
-
 
         {/* Financial Summary */}
 
         <section>
-
           <div className="mb-4">
             <h2 className="text-lg font-bold">
               खाते सारांश
@@ -186,13 +189,11 @@ export default async function CustomerPage({
             </p>
           </div>
 
-
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
 
             {/* Total Purchases */}
 
             <div className="group rounded-2xl border bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
-
               <div className="flex items-start justify-between">
 
                 <div>
@@ -212,14 +213,11 @@ export default async function CustomerPage({
               </div>
 
               <div className="mt-5 h-1 w-10 rounded-full bg-amber-500 transition-all duration-200 group-hover:w-16" />
-
             </div>
-
 
             {/* Total Paid */}
 
             <div className="group rounded-2xl border bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
-
               <div className="flex items-start justify-between">
 
                 <div>
@@ -239,14 +237,11 @@ export default async function CustomerPage({
               </div>
 
               <div className="mt-5 h-1 w-10 rounded-full bg-green-500 transition-all duration-200 group-hover:w-16" />
-
             </div>
-
 
             {/* Outstanding */}
 
             <div className="group rounded-2xl border bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
-
               <div className="flex items-start justify-between">
 
                 <div>
@@ -284,20 +279,50 @@ export default async function CustomerPage({
                     : "mt-5 h-1 w-10 rounded-full bg-green-500 transition-all duration-200 group-hover:w-16"
                 }
               />
+            </div>
 
+            {/* Advance / Unallocated */}
+
+            <div className="group rounded-2xl border bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
+              <div className="flex items-start justify-between">
+
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Advance Balance
+                  </p>
+
+                  <p
+                    className={
+                      unallocatedAmount > 0
+                        ? "mt-3 text-2xl font-bold tracking-tight text-amber-600"
+                        : "mt-3 text-2xl font-bold tracking-tight text-muted-foreground"
+                    }
+                  >
+                    {formatCurrency(unallocatedAmount)}
+                  </p>
+                </div>
+
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+                  <Wallet className="h-5 w-5" />
+                </div>
+
+              </div>
+
+              <p className="mt-4 text-xs text-muted-foreground">
+                Extra payment available for future sales
+              </p>
+
+              <div className="mt-5 h-1 w-10 rounded-full bg-amber-500 transition-all duration-200 group-hover:w-16" />
             </div>
 
           </div>
-
         </section>
-
 
         {/* Order History */}
 
         <section className="overflow-hidden rounded-2xl border bg-white shadow-sm">
 
-          <div className="border-b bg-gradient-to-r from-amber-50/60 to-white p-6">
-
+          <div className="border-b bg-linear-to-r from-amber-50/60 to-white p-6">
             <div className="flex items-center gap-3">
 
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-100 text-amber-700">
@@ -315,14 +340,10 @@ export default async function CustomerPage({
               </div>
 
             </div>
-
           </div>
 
-
           <div>
-
             {customerSales.map((sale) => (
-
               <div
                 key={sale.id}
                 className="border-b p-5 last:border-b-0 sm:p-6"
@@ -333,7 +354,6 @@ export default async function CustomerPage({
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
 
                   <div>
-
                     <div className="flex items-center gap-2">
 
                       <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
@@ -349,9 +369,7 @@ export default async function CustomerPage({
                     <p className="mt-2 text-sm text-muted-foreground">
                       📦 {sale.quantity} पाऊच
                     </p>
-
                   </div>
-
 
                   <div className="flex flex-col items-start gap-2 sm:items-end">
 
@@ -364,7 +382,6 @@ export default async function CustomerPage({
                   </div>
 
                 </div>
-
 
                 {/* Payment Status */}
 
@@ -402,7 +419,6 @@ export default async function CustomerPage({
 
                   </div>
 
-
                   <Badge
                     className={
                       sale.paymentStatus === "Paid"
@@ -417,7 +433,6 @@ export default async function CustomerPage({
 
                 </div>
 
-
                 {/* Reminder */}
 
                 {sale.amountRemaining > 0 && (
@@ -431,20 +446,16 @@ export default async function CustomerPage({
                 )}
 
               </div>
-
             ))}
-
           </div>
 
         </section>
-
 
         {/* Payment History */}
 
         <section className="overflow-hidden rounded-2xl border bg-white shadow-sm">
 
-          <div className="border-b bg-gradient-to-r from-green-50/50 to-white p-6">
-
+          <div className="border-b bg-linear-to-r from-green-50/50 to-white p-6">
             <div className="flex items-center gap-3">
 
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-green-50 text-green-700">
@@ -462,14 +473,11 @@ export default async function CustomerPage({
               </div>
 
             </div>
-
           </div>
-
 
           <div className="p-6">
 
             {customerPayments.length === 0 ? (
-
               <div className="rounded-xl border border-dashed bg-[#faf9f6] p-8 text-center">
 
                 <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-muted">
@@ -485,49 +493,72 @@ export default async function CustomerPage({
                 </p>
 
               </div>
-
             ) : (
-
               <div className="divide-y">
 
                 {customerPayments.map((payment) => (
-
                   <div
-                    key={payment.id}
+                    key={`${payment.id}-${payment.saleId || "advance"}`}
                     className="flex items-center justify-between gap-4 py-4 first:pt-0 last:pb-0"
                   >
 
                     <div className="flex items-center gap-3">
 
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-green-50 text-green-600">
+                      <div
+                        className={
+                          payment.saleId === ""
+                            ? "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600"
+                            : "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-green-50 text-green-600"
+                        }
+                      >
                         <Wallet className="h-4 w-4" />
                       </div>
 
                       <div>
+                        <div className="flex items-center gap-2">
 
-                        <p className="font-medium">
-                          {payment.paymentMode}
-                        </p>
+                          <p className="font-medium">
+                            {payment.paymentMode}
+                          </p>
+
+                          {payment.saleId === "" && (
+                            <Badge
+                              variant="secondary"
+                              className="border-amber-200 bg-amber-50 text-amber-700"
+                            >
+                              Advance
+                            </Badge>
+                          )}
+
+                        </div>
 
                         <p className="mt-0.5 text-sm text-muted-foreground">
                           {formatDate(payment.date)}
                         </p>
 
+                        {payment.saleId === "" && (
+                          <p className="mt-1 text-xs text-amber-700">
+                            Available for future sales
+                          </p>
+                        )}
                       </div>
 
                     </div>
 
-
-                    <p className="font-bold text-green-600">
+                    <p
+                      className={
+                        payment.saleId === ""
+                          ? "font-bold text-amber-600"
+                          : "font-bold text-green-600"
+                      }
+                    >
                       +{formatCurrency(payment.amount)}
                     </p>
 
                   </div>
-
                 ))}
 
               </div>
-
             )}
 
           </div>
